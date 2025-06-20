@@ -334,7 +334,7 @@ local sets = {
         Neck = 'Sibyl Scarf',
         Ear1 = 'Friomisi Earring',
         Ear2 = 'Hecate\'s Earring',
-        Body = 'Nyame Mail',
+        Body = 'Lanun Frac +3',
         Hands = 'Nyame Gauntlets',
         Ring1 = 'Dingir Ring',
         Ring2 = 'Archon Ring',
@@ -358,22 +358,22 @@ local sets = {
     },
 
     QD = {
-        Ammo = 'Living Bullet',
-        Head = 'Laksa. Tricorne +1',
+        Ammo = 'Hauksbok Bullet',
+        Head = 'Nyame Helm',
         Neck = 'Baetyl Pendant',
         Ear1 = 'Friomisi Earring',
-        Ear2 = 'Crematio Earring',
+        Ear2 = 'Hecate\'s Earring',
         Body = 'Lanun Frac +3',
         Hands = 'Carmine Fin. Ga. +1',
         Ring1 = 'Dingir Ring',
         Ring2 = 'Metamor. Ring +1',
         Back = { Name = 'Camulus\'s Mantle', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Mag. Acc+20', [3] = 'AGI+30', [4] = 'Magic Damage +20' } },
-        Waist = 'Eschan Stone',
+        Waist = 'Skrymir Cord',
         Legs = 'Nyame Flanchard',
-        Feet = 'Chass. Bottes +1',
+        Feet = 'Chass. Bottes +2',
     },
     QD_Acc = {--with AF 2/3 and regal is better
-        Ammo = 'Living Bullet',
+        Ammo = 'Hauksbok Bullett',
         Head = 'Malignance Chapeau',
         Neck = 'Sanctity Necklace',
         Ear2 = 'Crep. Earring',
@@ -619,41 +619,35 @@ profile.HandleDefault = function()
     end
     
     --main wep
-    if gcdisplay.GetCycle('MH') == 'Naegling' then
-        gFunc.EquipSet(sets.Naegling);
-    elseif gcdisplay.GetCycle('MH') == 'Melee Rostam' then
-        gFunc.EquipSet(sets.MeleeRostam);
-    elseif gcdisplay.GetCycle('MH') == 'Range Rostam' then
-        gFunc.EquipSet(sets.RangeRostam);
-    end
+    local MHWep = {
+        ['Naegling'] = 'Naegling',
+        ['Melee Rostam'] = { Name = 'Rostam', AugPath = 'B' },
+        ['Range Rostam'] = { Name = 'Rostam', AugPath = 'A' },
+    }
+    gFunc.Equip('Main', MHWep[gcdisplay.GetCycle('MH')]);
     --offhand
-    if gcdisplay.GetCycle('OH') == 'Gleti' then
-        gFunc.EquipSet(sets.Gleti);
-    elseif gcdisplay.GetCycle('OH') == 'Degen' then
-        gFunc.EquipSet(sets.Degen);
-    elseif gcdisplay.GetCycle('OH') == 'Tauret' then
-        gFunc.EquipSet(sets.Tauret);
-    elseif gcdisplay.GetCycle('OH') == 'Roll Rostam' then
-        gFunc.EquipSet(sets.RollRostam);
-    end
+    local OHWep = {
+        ['Gleti'] = 'Gleti\'s Knife',
+        ['Degen'] = 'Demersal Degen +1',
+        ['Tauret'] = 'Tauret',
+        ['Roll Rostam'] = { Name = 'Rostam', AugPath = 'C' },
+    }
+    gFunc.Equip('Sub', OHWep[gcdisplay.GetCycle('OH')]);
 
 	--gun
-    if gcdisplay.GetCycle('RWep') == 'Death Penalty' then
-        gFunc.EquipSet(sets.DeathPenalty)
-    elseif gcdisplay.GetCycle('RWep') == 'Fomalhaut' then
-        gFunc.EquipSett(sets.Fomalhaut)
-    elseif gcdisplay.GetCycle('RWep') == 'TP Bonus' then
-        gFunc.EquipSet(sets.TPGun)
-    end
+    local RWep = {
+        ['Death Penalty'] = 'Death Penalty',
+        ['Fomalhaut'] = 'Fomalhaut',
+        ['TP Bonus'] = 'Anarchy +2',
+    }
+    gFunc.Equip('Range', RWep[gcdisplay.GetCycle('RWep')]);
     --ammo
-    if gcdisplay.GetCycle('Ammo') == 'MAB' then
-        gFunc.EquipSet(sets.LivingBullet)
-    elseif gcdisplay.GetCycle('Ammo') == 'Phys.' then
-        gFunc.EquipSet(sets.ChronoBullet)
-    elseif gcdisplay.GetCycle('Ammo') == 'Brz.' then
-        gFunc.EquipSet(sets.BronzeBullet)
-    end
-
+    local Ammo = {
+        ['MAB'] = 'Living Bullet',
+        ['Phys.'] = 'Chrono Bullet',
+        ['Brz.'] = 'Bronze Bullet',
+    }
+    gFunc.Equip('Ammo', Ammo[gcdisplay.GetCycle('Ammo')]);
 
     gcinclude.CheckDefault ();
     if (gcdisplay.GetToggle('DTset') == true) then 
