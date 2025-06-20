@@ -421,6 +421,9 @@ local sets = {
     Degen = {
         Sub = 'Demersal Degen +1',
     },
+    Gleti = {
+        Sub = 'Gleti\'s Knife',
+    },
 
     ['bronzebullet'] = {
         Main = 'Naegling',
@@ -614,7 +617,8 @@ profile.HandleDefault = function()
     elseif (player.IsMoving == true) then
 		gFunc.EquipSet(sets.Movement);
     end
-     --main wep
+    
+    --main wep
     if gcdisplay.GetCycle('MH') == 'Naegling' then
         gFunc.EquipSet(sets.Naegling);
     elseif gcdisplay.GetCycle('MH') == 'Melee Rostam' then
@@ -629,7 +633,10 @@ profile.HandleDefault = function()
         gFunc.EquipSet(sets.Degen);
     elseif gcdisplay.GetCycle('OH') == 'Tauret' then
         gFunc.EquipSet(sets.Tauret);
+    elseif gcdisplay.GetCycle('OH') == 'Roll Rostam' then
+        gFunc.EquipSet(sets.RollRostam);
     end
+
 	--gun
     if gcdisplay.GetCycle('RWep') == 'Death Penalty' then
         gFunc.EquipSet(sets.DeathPenalty)
