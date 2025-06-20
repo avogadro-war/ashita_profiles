@@ -633,7 +633,6 @@ profile.HandleDefault = function()
         ['Roll Rostam'] = { Name = 'Rostam', AugPath = 'C' },
     }
     gFunc.Equip('Sub', OHWep[gcdisplay.GetCycle('OH')]);
-
 	--gun
     local RWep = {
         ['Death Penalty'] = 'Death Penalty',
@@ -660,21 +659,25 @@ end
 
 profile.HandleAbility = function()
     local ability = gData.GetAction();
+    local exactGearSets = {
+    ['Wild Card'] = sets.WildCard,
+    ['Fold'] = sets.Fold,
+    ['Random Deal'] = sets.RandomDeal,
+    ['Snake Eye'] = sets.SnakeEye,
+}
 
-    if (ability.Name:contains('Roll')) then
-        gFunc.EquipSet(sets.Dt);
-        gFunc.EquipSet(sets.Rolls);
-        gcinclude.DoCORmsg(ability.Name);
-    elseif (ability.Name == 'Wild Card') then gFunc.EquipSet(sets.WildCard);
-    elseif (ability.Name == 'Fold') then gFunc.EquipSet(sets.Fold);
-    elseif (ability.Name == 'Random Deal') then gFunc.EquipSet(sets.RandomDeal);
-    elseif (ability.Name == 'Snake Eye') then gFunc.EquipSet(sets.SnakeEye);
-    elseif (ability.Name:contains('Shot')) and (ability.Name ~= 'Triple Shot') then
-        gFunc.EquipSet(sets.QD);
-        if (gcdisplay.GetCycle('Melee') == 'Acc') or (ability.Name == 'Dark Shot') or (ability.Name == 'Light Shot') then
-            gFunc.EquipSet(sets.QD_Acc);
-        end
+if ability.Name:contains('Roll') then
+    gFunc.EquipSet(sets.Dt)
+    gFunc.EquipSet(sets.Rolls)
+    gcinclude.DoCORmsg(ability.Name)
+elseif exactGearSets[ability.Name] then
+    gFunc.EquipSet(exactGearSets[ability.Name])
+elseif ability.Name:contains('Shot') and ability.Name ~= 'Triple Shot' then
+    gFunc.EquipSet(sets.QD)
+    if gcdisplay.GetCycle('Melee') == 'Acc' or ability.Name == 'Dark Shot' or ability.Name == 'Light Shot' then
+        gFunc.EquipSet(sets.QD_Acc)
     end
+end
 
     gcinclude.CheckCancels();
 end
@@ -697,24 +700,25 @@ profile.HandleMidcast = function()
     local spell = gData.GetAction();
     local target = gData.GetActionTarget();
 
-    if (spell.Skill == 'Enhancing Magic') then
-        gFunc.EquipSet(sets.Enhancing);
-    elseif (spell.Skill == 'Healing Magic') then
-        gFunc.EquipSet(sets.Cure);
-    elseif (spell.Skill == 'Elemental Magic') then
-        gFunc.EquipSet(sets.Nuke);
-        if (spell.Element == weather.WeatherElement) or (spell.Element == weather.DayElement) then
-            gFunc.Equip('Waist', 'Hachirin-no-Obi');
-        end
-    elseif (spell.Skill == 'Enfeebling Magic') then
-        gFunc.EquipSet(sets.Enfeebling);
-    elseif (spell.Skill == 'Dark Magic') then
-        gFunc.EquipSet(sets.Macc);
-        if (string.contains(spell.Name, 'Aspir') or string.contains(spell.Name, 'Drain')) then
-            gFunc.EquipSet(sets.Drain);
-        end
+    local skillSets = {
+    ['Enhancing Magic'] = sets.Enhancing,
+    ['Healing Magic'] = sets.Cure,
+    ['Elemental Magic'] = sets.Nuke,
+    ['Enfeebling Magic'] = sets.Enfeebling,
+    ['Dark Magic'] = sets.Macc,
+    }
+
+    local gearSet = skillSets[spell.Skill]
+    if gearSet then
+        gFunc.EquipSet(gearSet)
     end
-	if (gcdisplay.GetToggle('TH') == true) then gFunc.EquipSet(sets.TH) end
+
+    -- Additional logic for special conditions:
+    if spell.Skill == 'Elemental Magic' and (spell.Element == weather.WeatherElement or spell.Element == weather.DayElement) then
+        gFunc.Equip('Waist', 'Hachirin-no-Obi')
+    elseif spell.Skill == 'Dark Magic' and (spell.Name:contains('Aspir') or spell.Name:contains('Drain')) then
+        gFunc.EquipSet(sets.Drain)
+    end
 end
 
 profile.HandlePreshot = function()
@@ -745,46 +749,54 @@ profile.HandleMidshot = function()
 end
 
 profile.HandleWeaponskill = function()
-    local canWS = gcinclude.CheckWsBailout();
-    if (canWS == false) then gFunc.CancelAction() return;
-    else
-        local ws = gData.GetAction();
-        local weather = gData.GetEnvironment();
-    
-        gFunc.EquipSet(sets.Ws_Default)
-        if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-        gFunc.EquipSet('Ws_' .. gcdisplay.GetCycle('MeleeSet')) end
-        
-        if string.match(ws.Name, 'Savage Blade') then
-            gFunc.EquipSet(sets.Savage_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Savage_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Evisceration') then
-            gFunc.EquipSet(sets.Evisceration_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Evisceration_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Aeolian Edge') then
-            gFunc.EquipSet(sets.Aedge_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Aedge_' .. gcdisplay.GetCycle('MeleeSet')); end
-            if (gcdisplay.GetCycle('MeleeSet') == 'Default') then gcinclude.DoMoonshade() end;
-            profile.Hachirin(Wind);
-        elseif string.match(ws.Name, 'Last Stand') then
-            gFunc.EquipSet(sets.Laststand_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Laststand_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Wildfire') then
-            gFunc.EquipSet(sets.Wildfire_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-                gFunc.EquipSet('Wildfire_' .. gcdisplay.GetCycle('MeleeSet')); 
+    if not gcinclude.CheckWsBailout() then
+        gFunc.CancelAction()
+        return
+    end
+
+    local ws = gData.GetAction()
+    local wsName = ws.Name
+    local meleeSet = gcdisplay.GetCycle('MeleeSet')
+
+    -- Equip default WS base sets
+    gFunc.EquipSet(sets.Ws_Default)
+    if meleeSet ~= 'Default' then
+        gFunc.EquipSet('Ws_' .. meleeSet)
+    end
+
+    -- Table of WS mappings
+    local wsTable = {
+        ['Savage Blade'] = { set = 'Savage' },
+        ['Evisceration'] = { set = 'Evisceration' },
+        ['Aeolian Edge'] = { set = 'Aedge', element = 'Wind', moonshade = true },
+        ['Last Stand'] = { set = 'Laststand' },
+        ['Wildfire'] = { set = 'Wildfire', element = 'Fire' },
+        ['Hot Shot'] = {set = 'Wildfire', element = 'Fire' },
+        ['Leaden Salute'] = { set = 'Leaden', element = 'Dark', moonshade = true },
+    }
+
+    -- Match WS by pattern and apply logic
+    for pattern, data in pairs(wsTable) do
+        if wsName:find(pattern) then
+            local baseSet = sets[data.set .. '_Default']
+            if baseSet then
+                gFunc.EquipSet(baseSet)
             end
-            profile.Hachirin('Fire');
-        elseif string.match(ws.Name, 'Leaden Salute') then
-            gFunc.EquipSet(sets.Leaden_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Leaden_' .. gcdisplay.GetCycle('MeleeSet')); end
-            if (gcdisplay.GetCycle('MeleeSet') == 'Default') then gcinclude.DoMoonshade() end
-            profile.Hachirin('Dark');
+
+            if meleeSet ~= 'Default' then
+                local variantSet = sets[data.set .. '_' .. meleeSet]
+                if variantSet then
+                    gFunc.EquipSet(variantSet)
+                end
+            elseif data.moonshade then
+                gcinclude.DoMoonshade()
+            end
+
+            if data.element then
+                profile.Hachirin(data.element)
+            end
+
+            break -- exit loop after first match
         end
     end
 end
