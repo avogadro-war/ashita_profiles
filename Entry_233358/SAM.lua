@@ -177,7 +177,7 @@ local sets = {
         Neck = { Name = 'Sam. Nodowa +2', AugPath='A' },
         Ear1 = 'Thrud Earring',
         Ear2 = 'Kasuga Earring +1',
-        Body = 'Nyame Mail',
+        Body = 'Sakonji Domaru +3',
         Hands = 'Kasuga Kote +3',
         Ring1 = 'Ephramad\'s Ring',
         Ring2 = 'Sroda Ring',
@@ -509,14 +509,16 @@ profile.HandleDefault = function()
         gFunc.EquipSet(sets.Resting);
     end
     --melee wep
-    if gcdisplay.GetCycle('MWep') == 'Doji' then
-        gFunc.EquipSet(sets.Doji);
-    elseif gcdisplay.GetCycle('MWep') == 'Masa' then
-        gFunc.EquipSet(sets.Masa);
-    elseif gcdisplay.GetCycle('MWep') == 'Pole' then
-        gFunc.EquipSet(sets.Pole);
-    elseif gcdisplay.GetCycle('MWep') == 'Prime' then
-        gFunc.EquipSet(sets.Kusanagi);
+    local mwTable = {
+        Doji  = 'Doji',
+        Masa  = 'Masa',
+        Pole  = 'Pole',
+        Prime = 'Kusanagi',
+    }
+
+    local choice = mwTable[gcdisplay.GetCycle('MWep')]
+    if choice and sets[choice] then
+        gFunc.EquipSet(sets[choice])
     end
 	
     gcinclude.CheckDefault ();
@@ -525,15 +527,28 @@ profile.HandleDefault = function()
 end
 
 profile.HandleAbility = function()
-    local ability = gData.GetAction();
+    local ability = gData.GetAction()
+    local name    = ability.Name
 
-    if string.match(ability.Name, 'Provoke') then gFunc.EquipSet(sets.Enmity);
-    elseif string.match(ability.Name, 'Meditate') then gFunc.EquipSet(sets.Meditate);
-    elseif string.match(ability.Name, 'Third Eye') then gFunc.EquipSet(sets.ThirdEye);
-    elseif string.match(ability.Name, 'Sengikori') then gFunc.EquipSet(sets.Sengikori);
-    elseif string.contains(ability.Name, 'Meikyo') then gFunc.EquipSet(sets.Meikyo) end
+    ----------------------------------------------------------------
+    -- map: Lua pattern → set key
+    ----------------------------------------------------------------
+    local abTable = {
+        ['^Provoke$']      = 'Enmity',
+        ['Meditate']       = 'Meditate',
+        ['Third Eye']      = 'ThirdEye',
+        ['Sengikori']      = 'Sengikori',
+        ['Meikyo']         = 'Meikyo',
+    }
 
-    gcinclude.CheckCancels();
+    for patt, setKey in pairs(abTable) do
+        if name:match(patt) then
+            gFunc.EquipSet(sets[setKey])
+            break
+        end
+    end
+
+    gcinclude.CheckCancels()
 end
 
 profile.HandleItem = function()
@@ -570,43 +585,62 @@ profile.HandleMidshot = function()
 end
 
 profile.HandleWeaponskill = function()
-    local meikyo = gData.GetBuffCount('Meikyo Shisui');
-    local sekkanoki = gData.GetBuffCount('Sekkanoki');
-    local canWS = gcinclude.CheckWsBailout();
-    if (canWS == false) then gFunc.CancelAction() return;
-    elseif (gcdisplay.GetToggle('PROC') == true) then
-        gFunc.EquipSet(sets.Ws_Proc);
-    else
-        local ws = gData.GetAction();
-    
-        gFunc.EquipSet(sets.Ws_Default)
-        if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-        gFunc.EquipSet('Ws_' .. gcdisplay.GetCycle('MeleeSet')) end
+    local meikyo    = gData.GetBuffCount('Meikyo Shisui')
+    local sekkanoki = gData.GetBuffCount('Sekkanoki')
 
-	    if string.match(ws.Name, 'Savage Blade') then
-            gFunc.EquipSet(sets.Savage_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Savage_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Tachi: Jinpu') then
-            gFunc.EquipSet(sets.Jinpu_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Jinpu_' .. gcdisplay.GetCycle('MeleeSet')); end
-            profile.Hachirin('Wind');
-        elseif string.match(ws.Name, 'Tachi: Ageha') then
-            gFunc.EquipSet(sets.Ageha_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Ageha_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Stardiver') then
-            gFunc.EquipSet(sets.Stardiver_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Stardiver_' .. gcdisplay.GetCycle('MeleeSet')); end
-        end
+    -- bail‑out / proc mode checks -----------------------------
+    if not gcinclude.CheckWsBailout() then
+        gFunc.CancelAction()
+        return
+    elseif gcdisplay.GetToggle('PROC') then
+        gFunc.EquipSet(sets.Ws_Proc)
+        return
+    end
 
-        if (meikyo >= 1) then gFunc.EquipSet(sets.Meikyo) end
-        if (sekkanoki >= 1) then gFunc.EquipSet(sets.Sekkanoki) end
-        if gcinclude.settings.HPSet == true then
-            gFunc.EquipSet(sets.HPSet)
+    local player    = gData.GetPlayer()
+    local ws        = gData.GetAction()
+    local wsName    = ws.Name
+    local meleeSet  = gcdisplay.GetCycle('MeleeSet')
+
+    -- always start from generic WS base -----------------------
+    gFunc.EquipSet(sets.Ws_Default)
+    if meleeSet ~= 'Default' then
+        gFunc.EquipSet('Ws_' .. meleeSet)
+    end
+    if player.TP == 3000 then
+        gFunc.Equip('Head', 'Nyame Helm');
+        gFunc.Equip('Ear2', 'Kasuga Earring +1');
+    end
+
+
+    ----------------------------------------------------------------
+    -- table:   exact‑string match → { key = baseName, element = … }
+    ----------------------------------------------------------------
+    local wsTable = {
+        ['Savage Blade']  = { key = 'Savage' },
+        ['Tachi: Jinpu']  = { key = 'Jinpu',    element = 'Wind' },
+        ['Tachi: Ageha']  = { key = 'Ageha' },
+        ['Stardiver']     = { key = 'Stardiver' },
+    }
+
+    local entry = wsTable[wsName]
+    if entry then
+        -- main WS gear
+        gFunc.EquipSet(sets[entry.key .. '_Default'])
+        if meleeSet ~= 'Default' and sets[entry.key .. '_' .. meleeSet] then
+            gFunc.EquipSet(entry.key .. '_' .. meleeSet)
         end
+        -- optional Hachirin element
+        if entry.element then
+            profile.Hachirin(entry.element)
+        end
+    end
+
+    -- situational add‑ons -------------------------------------
+    if meikyo    > 0 then gFunc.EquipSet(sets.Meikyo)    end
+    if sekkanoki > 0 then gFunc.EquipSet(sets.Sekkanoki) end
+    if gcinclude.settings.HPSet then
+        gFunc.EquipSet(sets.HPSet)
     end
 end
 
