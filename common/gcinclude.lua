@@ -187,7 +187,6 @@ function gcinclude.SetVariables()
 	gcdisplay.CreateToggle('DTset', false);
 	gcdisplay.CreateToggle('Kite', false);
 	gcdisplay.CreateToggle('TH', false);
-	gcdisplay.CreateToggle('Autohaste', false);
 	if player.MainJob == 'NIN' or player.MainJob == 'DNC' or player.MainJob == 'BLU' or player.MainJob == 'THF' or player.SubJob == 'NIN' or player.SubJob == 'DNC' then
 		gcdisplay.CreateToggle('AutoDW', true);
 	end
