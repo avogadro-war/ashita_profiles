@@ -251,6 +251,27 @@ local function getMANeeded()
     end
 end
 
+local function GetMAGearSet(pool)
+    local maNeeded = getDwNeeded()
+    if type(maNeeded) ~= 'number' or maNeeded <= 0 or type(pool) ~= 'table' then return {} end
+
+    table.sort(pool, function(a, b) return a[1] < b[1] end) -- lower priority first
+
+    local totalMA = 0
+    local gearSet = {}
+
+    for _, gear in ipairs(pool) do
+        local priority, slot, item, maVal = table.unpack(gear)
+        if (totalMA + maVal) <= maNeeded then
+            gearSet[slot] = item
+            totalMA = totalMA + maVal
+        end
+        if totalMA >= maNeeded then break end
+    end
+
+    return gearSet, totalMA
+end
+
 local partyFromPacket = T {};
 
 packetsIncoming[0x0DD] = function(e)

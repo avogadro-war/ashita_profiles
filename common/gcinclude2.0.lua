@@ -50,7 +50,6 @@ gcinclude.sets = T{
 		Range = 'Halcyon Rod',
 		Ring2 = 'Pelican Ring',
     },
-	
 };
 gcinclude.settings = {
 	--[[
@@ -76,7 +75,17 @@ gcinclude.settings = {
 	empyrean = false;
 	aeonic = false;
 	tpBonusWeapon = false;
-	wakeUp = false;
+	autoHaste = false;
+    totalHasteCap = (819/1024);
+    equipHasteCap = (256/1024);
+	magicHasteCap = (448/1024);
+	JAHasteCap = (256/1024);
+	brdBonus = 0;
+	geoBonus = 0;
+    haste1Value = 150 / 1024;
+    haste2Value = 307 / 1024;
+    embravaValue = 266 / 1024;
+	dncHasteSamba = false;
 };
 
 --[[
@@ -84,17 +93,14 @@ Everything else in this file should not be editted by anyone trying to use my pr
 in each individual job lua file. Unless you know what you're doing then it is best to leave everything below this line alone, the rest here are various functions and arrays etc.
 ]]
 gcdisplay = gFunc.LoadFile('common\\gcdisplay.lua');
-event = gFunc.LoadFile('common\\event.lua');
-encoding = gFunc.LoadFile('common\\encoding.lua');
-JHaste = gFunc.LoadFile('common\\J-Haste.lua');
 
-gcinclude.AliasList = T{'gcmessages','zz','autodw','autoDW','autohasso','autohaste','dncparty','brdbonus','geobonus','vagarysc','liquefaction','liq','scission', 'sci', 'reverberation', 'reverb', 'rev', 'detonation', 'det', 
+gcinclude.AliasList = T{'gcmessages','autohaste','dncparty','brdbonus','geobonus','vagarysc','liquefaction','liq','scission', 'sci', 'reverberation', 'reverb', 'rev', 'detonation', 'det', 
 						'induration', 'ind','impaction','imp','transfixtion', 'tra', 'compression', 'com', 'fragmentation', 'frag', 
-						'fra', 'gravitation', 'grav', 'gra', 'distortion', 'dis', 'fusion','fus','MH','mh','sub','Sub','oh','OH','curecheat',
+						'fra', 'gravitation', 'grav', 'gra', 'distortion', 'dis', 'fusion','fus','MH','mh','sub','Sub','curecheat',
 						'externalphalanx','phalanxset','hpset','weaponlock','plap','wsdistance','setcycle','killingblow','dt','th','kite',
 						'meleeset','gcdrain','gcaspir','nukeset','burst','weapon','element','helix','weather','nuke','death','fight',
-						'sir','tankset','proc','cj','shield','pupmode','cormsg','forcestring','siphon','warpring','telering','rrset',
-						'craftset','zeniset','fishset','skillchains','ammo','aeonic','empyrean','mythic','rwep','gun','mwep','ullr','bullet',};
+						'sir','tankset','proc','cj','pupmode','cormsg','forcestring','siphon','warpring','telering','rrset',
+						'craftset','zeniset','fishset','skillchains','ammo','aeonic','empyrean','mythic','rwep','gun','mwep','bullet',};
 gcinclude.Towns = T{'Tavnazian Safehold','Al Zahbi','Aht Urhgan Whitegate','Nashmau','Southern San d\'Oria [S]','Bastok Markets [S]','Windurst Waters [S]','San d\'Oria-Jeuno Airship','Bastok-Jeuno Airship','Windurst-Jeuno Airship','Kazham-Jeuno Airship','Southern San d\'Oria','Northern San d\'Oria','Port San d\'Oria','Chateau d\'Oraguille','Bastok Mines','Bastok Markets','Port Bastok','Metalworks','Windurst Waters','Windurst Walls','Port Windurst','Windurst Woods','Heavens Tower','Ru\'Lude Gardens','Upper Jeuno','Lower Jeuno','Port Jeuno','Rabao','Selbina','Mhaura','Kazham','Norg','Mog Garden','Celennia Memorial Library','Western Adoulin','Eastern Adoulin'};
 gcinclude.LockingRings = T{'Echad Ring', 'Trizek Ring', 'Endorsement Ring', 'Capacity Ring', 'Warp Ring','Facility Ring','Dim. Ring (Dem)','Dim. Ring (Mea)','Dim. Ring (Holla)'};
 gcinclude.DistanceWS = T{'Flaming Arrow','Piercing Arrow','Dulling Arrow','Sidewinder','Blast Arrow','Arching Arrow','Empyreal Arrow','Refulgent Arrow','Apex Arrow','Namas Arrow','Jishnu\'s Randiance','Hot Shot','Split Shot','Sniper Shot','Slug Shot','Blast Shot','Heavy Shot','Detonator','Numbing Shot','Last Stand','Coronach','Wildfire','Trueflight','Leaden Salute','Myrkr','Dagan','Moonlight','Starlight'};
@@ -152,6 +158,7 @@ gcinclude.Rolls = T{
     {'Companion\'s Roll', 2, 10, '--'},  -- No specific job
     {'Avenger\'s Roll', 4, 8, '--'},  -- No specific job
 };
+
 gcinclude.RRSET = false;
 gcinclude.CraftSet = false;
 gcinclude.ZeniSet = false;
@@ -162,6 +169,7 @@ gcinclude.CureCheat = false;
 gcinclude.externalPhalanx = false;
 gcinclude.weaponLock = false;
 gcinclude.phalanxSet = false; 
+
 
 function gcinclude.Message(toggle, status)
 	if toggle ~= nil and status ~= nil then
@@ -182,274 +190,513 @@ function gcinclude.ClearAlias()
 end
 
 function gcinclude.SetVariables()
-    local player = gData.GetPlayer()
-    local mainJob = player.MainJob
-    local subJob = player.SubJob
+	local player = gData.GetPlayer();
 
-    -- Core toggles and cycles
-    gcdisplay.CreateToggle('DTset', false)
-    gcdisplay.CreateToggle('Kite', false)
-    gcdisplay.CreateToggle('TH', false)
-
-    -- AutoDW jobs
-    local autoDWJobs = { NIN=true, DNC=true, BLU=true, THF=true }
-    if autoDWJobs[mainJob] or autoDWJobs[subJob] then
-        gcdisplay.CreateToggle('AutoDW', true)
-    end
-
-    gcdisplay.CreateCycle('MeleeSet', { 'Default', 'Hybrid', 'Acc' })
-
-    -- Nuking jobs
-    local nukeJobs = { RDM=true, BLM=true, SCH=true, GEO=true }
-    if nukeJobs[mainJob] then
-        gcdisplay.CreateToggle('Burst', true)
-        gcdisplay.CreateCycle('NukeSet', { 'Power', 'Macc' })
-        if mainJob == 'BLM' or mainJob == 'SCH' then
-            gcdisplay.CreateCycle('Element', { 'Thunder', 'Blizzard', 'Fire', 'Stone', 'Aero', 'Water', 'Light', 'Dark' })
-            if mainJob == 'BLM' then
-                gcdisplay.CreateToggle('Death', false)
-            end
-        end
-    end
-
-    -- Support jobs
-    if mainJob == 'BRD' or mainJob == 'GEO' or mainJob == 'WHM' then
-        gcdisplay.CreateToggle('Fight', false)
-    end
-
-    -- PLD setup
-    if mainJob == 'PLD' then
-        gcdisplay.CreateToggle('SIR', true)
-        gcdisplay.CreateCycle('TankSet', { 'Main', 'MEVA', 'None' })
-        gcdisplay.CreateCycle('OH', { 'Duban', 'Aegis' })
-        gcdisplay.CreateCycle('MH', { 'Burtgang', 'Naegling' })
-    end
-
-    -- RUN setup
-    if mainJob == 'RUN' then
-        gcdisplay.CreateToggle('SIR', true)
-        gcdisplay.CreateCycle('TankSet', { 'Main', 'MEVA', 'None' })
-    end
-
-    -- SAM setup
-    if mainJob == 'SAM' then
-        gcdisplay.CreateToggle('PROC', false)
-        gcdisplay.CreateToggle('AutoHasso', true)
-        gcdisplay.CreateCycle('MWep', { 'Doji', 'Masa', 'Pole', 'Prime' })
-    end
-
-    -- PUP setup
-    if mainJob == 'PUP' then
-        gcdisplay.CreateCycle('PupMode', { 'Tank', 'Melee', 'Ranger', 'Mage' })
-    end
-
-    -- BRD setup
-    if mainJob == 'BRD' then
-        gcdisplay.CreateToggle('String', false)
-    end
-
-    -- COR setup
-    if mainJob == 'COR' then
-        gcdisplay.CreateCycle('MH', { 'Naegling', 'Melee Rostam', 'Range Rostam' })
-        gcdisplay.CreateCycle('RWep', { 'Death Penalty', 'Fomalhaut.', 'TP Bonus' })
-        gcdisplay.CreateCycle('Ammo', { 'MAB', 'Phys.', 'Brz.' })
-        if subJob == 'DNC' or subJob == 'NIN' then
-            gcdisplay.CreateCycle('OH', { 'Gleti', 'Tauret', 'Roll Rostam' })
-        end
-    end
-
-    -- BLU setup
-    if mainJob == 'BLU' then
-        gcdisplay.CreateToggle('CJmode', false)
-    end
-
-    -- RDM setup
-    if mainJob == 'RDM' then
-        gcdisplay.CreateCycle('MH', { 'Crocea', 'Naegling', 'Maxentius', 'Tauret' })
-        gcdisplay.CreateToggle('Ullr', false)
-        if subJob == 'DNC' or subJob == 'NIN' then
-            gcdisplay.CreateCycle('OH', { 'Degen', 'TPBonus', 'Bunzi' })
-        end
-    end
-end
--- Optimized GCinclude HandleCommands with Modular Job Support
-function gcinclude.DoSCHSkillchain(cmd)
-    local messages = {
-        sci = {"Fire -> Stone", "Aero -> Stone", "MB: Stone"},
-        liq = {"Stone -> Fire", "Thunder -> Fire", "MB: Fire"},
-        rev = {"Stone -> Water", "Luminohelix -> Water", "MB: Water"},
-        det = {"Stone -> Aero", "Thunder -> Wind", "MB: Aero"},
-        ind = {"Water -> Blizzard", "MB: Blizzard"},
-        imp = {"Water -> Thunder", "Blizzard -> Thunder", "MB: Thunder"},
-        tra = {"Noctohelix -> Luminohelix", "MB: Light"},
-        com = {"Blizzard -> Noctohelix", "MB: Dark"},
-        fra = {"Blizzard -> Water", "MB: Wind/Lightning"},
-        fus = {"Fire -> Thunder", "MB: Fire/Light"},
-        gra = {"Aero -> Noctohelix", "MB: Stone/Dark"},
-        dis = {"Luminohelix -> Stone", "MB: Blizzard/Water"},
-        scs = {
-            "/sci or /scission       || /liq or /liquefaction",
-            "/rev or /reverberation  || /det or /detonation",
-            "/ind or /induration     || /imp or /impaction",
-            "/tra or /transfixion    || /com or /compression",
-            "/fra or /fragmentation  || /fus or /fusion",
-            "/gra or /gravitation    || /dis or /distortion"
-        }
-    }
-    local key = cmd == "skillchains" and "scs" or cmd
-    local header = chat.header(key:gsub("^%l", string.upper))
-    if messages[key] then
-        for _, msg in ipairs(messages[key]) do
-            print(header:append(chat.message(msg)))
-        end
-    else
-        print(header:append(chat.message("Unknown skillchain command.")))
-    end
+	gcdisplay.CreateToggle('DTset', false);
+	gcdisplay.CreateToggle('Autohaste', false);
+	gcdisplay.CreateToggle('Kite', false);
+	gcdisplay.CreateToggle('TH', false);
+	gcdisplay.CreateCycle('MeleeSet', {[1] = 'Default', [2] = 'Hybrid', [3] = 'Acc'});
+	if (player.MainJob == 'RDM') or (player.MainJob == 'BLM') or (player.MainJob == 'SCH') or (player.MainJob == 'GEO') then
+		gcdisplay.CreateToggle('Burst', true);
+		gcdisplay.CreateCycle('NukeSet', {[1] = 'Power', [2] = 'Macc',});
+		if (player.MainJob == 'BLM') or (player.MainJob == 'SCH') then
+			gcdisplay.CreateCycle('Element', {[1] = 'Thunder', [2] = 'Blizzard', [3] = 'Fire', [4] = 'Stone', [5] = 'Aero', [6] = 'Water', [7] = 'Light', [8] = 'Dark'});
+			if (player.MainJob == 'BLM') then
+				gcdisplay.CreateToggle('Death', false);
+			end
+		end
+	end
+	if (player.MainJob == 'RDM') or (player.MainJob == 'BRD') or (player.MainJob == 'GEO') or (player.MainJob == 'WHM') then
+		gcdisplay.CreateToggle('Fight', false);
+	end
+	if (player.MainJob == 'PLD') then
+		gcinclude.MH = 'Burtgang';
+		gcinclude.Sub = 'Priwen';
+		gcdisplay.CreateToggle('SIR', true);
+		gcdisplay.CreateCycle('TankSet', {[1] = 'Main', [2] = 'MEVA', [3] = 'None'});
+	end
+	if (player.MainJob == 'RUN') then
+		gcdisplay.CreateToggle('SIR', true);
+		gcdisplay.CreateCycle('TankSet', {[1] = 'Main', [2] = 'MEVA', [3] = 'None'});
+	end
+	if (player.MainJob == 'SAM') or (player.MainJob == 'NIN') then
+		gcdisplay.CreateToggle('PROC', false);
+		gcdisplay.CreateCycle('MWep', {[1] = 'Doji', [2] = 'Masa', [3] = 'Pole', [4] = 'Prime'});
+	end
+	if (player.MainJob == 'PUP') then
+		gcdisplay.CreateCycle('PupMode', {[1] = 'Tank', [2] = 'Melee', [3] = 'Ranger', [4] = 'Mage'});
+	end
+	if (player.MainJob == 'BRD') then
+		gcdisplay.CreateToggle('String', false);
+	end
+	if (player.MainJob == 'COR') then
+		gcdisplay.CreateCycle('MWep', {[1] = 'Nglng', [2] = 'MRostam', [3] = 'RRostam'});
+		gcdisplay.CreateCycle('RWep', {[1] = 'DP', [2] = 'FomH.', [3] = 'TPB'});
+		gcdisplay.CreateCycle('Ammo', {[1] = 'MAB', [2] = 'Phys.', [3] = 'Brz.'});
+	end
+	if (player.MainJob == 'BLU') then
+		gcdisplay.CreateToggle('CJmode', false);
+	end
 end
 
--- Optimized GCinclude HandleCommands
 function gcinclude.HandleCommands(args)
-    if not gcinclude.AliasList:contains(args[1]) then return end
+	if not gcinclude.AliasList:contains(args[1]) then return end
 
-    local player = gData.GetPlayer()
-    local cmd = string.lower(args[1] or '')
-    local toggle, status
-
-    ------------------------------------------------------------------------
-    -- Toggle and Cycle Mappings
-    ------------------------------------------------------------------------
-    local toggleCommands = {
-        autodw = 'AutoDW', autohasso = 'AutoHasso', dt = 'DTset', aeolian = 'Aeolian',
-        kite = 'Kite', th = 'TH', burst = 'Burst', death = 'Death', cj = 'CJmode',
-        sir = 'SIR', proc = 'PROC', forcestring = 'String', curecheat = 'Cure Cheat Set',
-        craftset = 'Crafting Set', zeniset = 'Zeni Pictures Set', fishset = 'Fishing Set'
-    }
-    local cycleCommands = {
-        meleeset = 'MeleeSet', nukeset = 'NukeSet', weapon = 'Weapon', element = 'Element',
-        tankset = 'TankSet', mwep = 'MWep', pupmode = 'PupMode', ammo = 'Ammo',
-        rwep = 'RWep', mh = 'MH', oh = 'OH'
-    }
-
-    if toggleCommands[cmd] then
-        gcdisplay.AdvanceToggle(toggleCommands[cmd])
-        toggle = toggleCommands[cmd]
-        status = gcdisplay.GetToggle(toggle)
-    elseif cycleCommands[cmd] then
-        gcdisplay.AdvanceCycle(cycleCommands[cmd])
-        toggle = cycleCommands[cmd]
-        status = gcdisplay.GetCycle(toggle)
-
-    ------------------------------------------------------------------------
-    -- Custom Logic Blocks
-    ------------------------------------------------------------------------
-    elseif cmd == 'gcmessages' then
-        gcinclude.settings.Messages = not gcinclude.settings.Messages
-        print(chat.header('GCinclude')
-            :append(chat.message('Chat messages are ' .. (gcinclude.settings.Messages and 'enabled' or 'disabled'))))
-
-    elseif cmd == 'wsdistance' then
-        local distance = tonumber(args[2])
-        if distance then
-            gcinclude.settings.WScheck = true
-            gcinclude.settings.WSdistance = distance
-        else
-            gcinclude.settings.WScheck = not gcinclude.settings.WScheck
-        end
-        print(chat.header('GCinclude')
-            :append(chat.message('WS distance check is now ' .. tostring(gcinclude.settings.WScheck))))
-
-    elseif cmd == 'autohaste' then
-        local subcmd = string.lower(args[2] or '')
-        if subcmd == 'help' or subcmd == '' then
-            print(chat.header('GCinclude'):append(chat.message('"/autohaste toggle" to toggle autohaste detection.')))
-            print(chat.header('GCinclude'):append(chat.message('Other: /autohaste brdbonus # | /autohaste geobonus #')))
-        elseif subcmd == 'brdbonus' and tonumber(args[3]) then
-            JHaste.metatable.brdBonus = tonumber(args[3])
-            print(chat.header('GCinclude'):append(chat.message('Bard bonus set to ' .. JHaste.metatable.brdBonus)))
-        elseif subcmd == 'geobonus' and tonumber(args[3]) then
-            JHaste.metatable.geoBonus = tonumber(args[3])
-            print(chat.header('GCinclude'):append(chat.message('Geomancy bonus set to ' .. JHaste.metatable.geoBonus)))
-        elseif subcmd == 'debug' then
-            local total = JHaste.metatable.totalHaste or 0
-            local dw = JHaste.metatable.dwNeeded or 'N/A'
-            local ma = JHaste.metatable.maNeeded or 'N/A'
-            local ja = JHaste.metatable.jobHaste or 0
-            local mh = JHaste.metatable.magicHaste or 0
-            print(chat.header('GCinclude'):append(chat.message(('Total Haste: %.2f%%'):format(total / 1024 * 100))))
-            if S{'DNC','THF','NIN','BLU'}:contains(player.MainJob) or S{'NIN','DNC'}:contains(player.SubJob) then
-                print(chat.header('GCinclude'):append(chat.message('DW Needed: ' .. dw)))
-            end
-            if S{'MNK','PUP'}:contains(player.MainJob) then
-                print(chat.header('GCinclude'):append(chat.message('MA Needed: ' .. ma)))
-            end
-            print(chat.header('GCinclude'):append(chat.message(('Job Haste: %.2f%%'):format(ja / 1024 * 100))))
-            print(chat.header('GCinclude'):append(chat.message(('Magic Haste: %.2f%%'):format(mh / 1024 * 100))))
-        end
-
-    elseif cmd == 'aeonic' or cmd == 'mythic' or cmd == 'empyrean' then
-        gcinclude.settings.aeonic = false
-        gcinclude.settings.mythic = false
-        gcinclude.settings.empyrean = false
-        gcinclude.settings.tpBonusWeapon = false
-        gcinclude.settings[cmd] = true
-        print(chat.header('GCinclude')
-            :append(chat.message(cmd:gsub("^%l", string.upper) .. ' weapon set toggled ON.')))
-
-    elseif cmd == 'weaponlock' then
-        gcinclude.weaponLock = not gcinclude.weaponLock
-        local action = gcinclude.weaponLock and 'disable' or 'enable'
-        AshitaCore:GetChatManager():QueueCommand(-1, '/lac ' .. action .. ' Main')
-        AshitaCore:GetChatManager():QueueCommand(-1, '/lac ' .. action .. ' Sub')
-        print(chat.header('GCinclude')
-            :append(chat.message('Weapon lock toggled ' .. (gcinclude.weaponLock and 'ON' or 'OFF'))))
-
-    elseif cmd == 'phalanxset' then
-        gcinclude.phalanxSet = not gcinclude.phalanxSet
-        print(chat.header('GCinclude')
-            :append(chat.message('Phalanx set toggled ' .. (gcinclude.phalanxSet and 'ON' or 'OFF'))))
-        if gcinclude.phalanxSet then
-            AshitaCore:GetChatManager():QueueCommand(-1, '/p Phalanx set on. <call21>')
-        end
-
-    elseif cmd == 'externalphalanx' then
-        gcinclude.externalPhalanx = not gcinclude.externalPhalanx
-        print(chat.header('GCinclude')
-            :append(chat.message('External phalanx toggled ' .. (gcinclude.externalPhalanx and 'on' or 'off'))))
-
-    elseif cmd == 'plap' then
-        local main = gData.GetEquipment().Main.Name
-        local wsByWeapon = {
-            ['Naegling'] = 'Savage Blade',
-            ['Crocea Mors'] = 'Savage Blade',
-            ['Tizona'] = 'Savage Blade',
-            ['Maxentius'] = 'Black Halo',
-            ['Tauret'] = 'Evisceration'
-        }
-        if wsByWeapon[main] then
-            AshitaCore:GetChatManager():QueueCommand(-1, '/ws "' .. wsByWeapon[main] .. '" <t>')
-            print(chat.header('GCinclude'):append(chat.message('Sending ' .. main .. ' plap.')))
-        else
-            print(chat.header('GCinclude'):append(chat.message('Invalid plap weapon.')))
-        end
-
-    elseif cmd == 'siphon' and player.MainJob == 'SMN' then
-        gcinclude.DoSiphon()
-
-    ------------------------------------------------------------------------
-    -- Modular Job Logic (Scholar Skillchains)
-    ------------------------------------------------------------------------
-    elseif player.MainJob == 'SCH' and S{'skillchains','scs','sci','liq','rev','det','ind','imp','tra','com','fra','fus','gra','dis'}:contains(cmd) then
-        gcinclude.DoSCHSkillchain(cmd)
+	local player = gData.GetPlayer();
+	local toggle = nil;
+	local status = nil;
+	
+	if args[1] == 'gcmessages' then
+		if gcinclude.settings.Messages then
+			gcinclude.settings.Messages = false;
+			print(chat.header('GCinclude'):append(chat.message('Chat messanges are disabled')));
+		else
+			gcinclude.settings.Messages = true;
+			print(chat.header('GCinclude'):append(chat.message('Chat messanges are enabled')));
+		end
+	elseif (args[1] == 'wsdistance') then
+		if (tonumber(args[2])) then 
+			gcinclude.settings.WScheck = true;
+			gcinclude.settings.WSdistance = tonumber(args[2]);
+			print(chat.header('GCinclude'):append(chat.message('WS Distance is on and set to ' .. gcinclude.settings.WSdistance)));
+		else
+			gcinclude.settings.WScheck = not gcinclude.settings.WScheck;
+			print(chat.header('GCinclude'):append(chat.message('WS distance check is now ' .. tostring(gcinclude.settings.WScheck))));
+			print(chat.header('GCinclude'):append(chat.message('Can change WS distance allowed by using /wsdistance ##')));
+		end
+	elseif (string.lower(args[1]) == 'vagarysc') then
+		if gcinclude.settings.vagarySC == 0 then
+			gcinclude.settings.vagarySC = 1 
+			print(chat.header('GCinclude'):append(chat.message('Vagary SC set toggled ON.')));
+		elseif gcinclude.settings.vagarySC == 1 then
+			gcinclude.settings.vagarySC = 0
+			print(chat.header('GCinclude'):append(chat.message('Vagary SC set toggled OFF.')));
+		end
+	elseif string.lower(args[1]) == 'autohaste' then
+		if string.lower(args[2]) == 'help' or args[2] == '' then
+			print(chat.header('GCinclude'):append(chat.message('\"/autohaste toggle\" to toggle autohaste detection to on or off.')))
+			print(chat.header('GCinclude'):append(chat.message('Other commands: /autohaste brdbonus (0-8) | /autohaste geobonus (0-x) | /autohaste dncparty')))
+		elseif string.lower(args[2]) == 'brdbonus' then
+			if tonumber(args[3]) and tonumber(args[3]) >= 0 and tonumber(args[3]) < 9 then
+				gcinclude.settings.brdBonus = tonumber(args[3])
+				print(chat.header('GCinclude'):append(chat.message('Bard song bonus set to ' .. gcinclude.settings.brdBonus)))
+			else
+				print(chat.header('GCinclude'):append(chat.message('Invalid amount for bard song bonus. Try a number between 0 and 8.')))
+			end
+		elseif string.lower(args[2]) == 'geobonus' then
+			if tonumber(args[3]) and tonumber(args[3]) >= 0 then
+				gcinclude.settings.geoBonus = tonumber(args[3])
+				print(chat.header('GCinclude'):append(chat.message('Geomancy bonus set to ' .. gcinclude.settings.geoBonus)))
+			else
+				print(chat.header('GCinclude'):append(chat.message('Invalid amount for Geomancy bonus. Try 0 or a positive number.')))
+			end
+		elseif string.lower(args[2]) == 'dncparty' then
+			gcinclude.settings.dncParty = not gcinclude.settings.dncParty
+			local status = gcinclude.settings.dncParty and 'ON' or 'OFF'
+			print(chat.header('GCinclude'):append(chat.message('Dancer in party. Haste Samba assumed ' .. status .. '.')))
+		elseif string.lower(args[2]) == 'toggle' then
+			gcdisplay.AdvanceToggle('Autohaste')
+			toggle = 'Autohaste'
+			status = gcdisplay.GetToggle('Autohaste')
+		end
+	elseif (string.lower(args[1]) == 'aeonic') then
+		gcinclude.settings.mythic = false
+		gcinclude.settings.empyrean = false
+		gcinclude.settings.tpBonusWeapon = false
+		if gcinclude.settings.aeonic == false then
+			gcinclude.settings.aeonic = true 
+			print(chat.header('GCinclude'):append(chat.message('Aeonic weapon set toggled ON.')));
+		else
+			gcinclude.settings.aeonic = false
+			print(chat.header('GCinclude'):append(chat.message('Aeonic weapon set toggled OFF.')));
+		end
+	elseif (string.lower(args[1]) == 'mythic') then
+		gcinclude.settings.aeonic = false
+		gcinclude.settings.empyrean = false
+		gcinclude.settings.tpBonusWeapon = false
+		if gcinclude.settings.mythic == false then
+			gcinclude.settings.mythic = true
+			print(chat.header('GCinclude'):append(chat.message('Mythic weapon set toggled ON.')));
+		else
+			gcinclude.settings.mythic = false
+			print(chat.header('GCinclude'):append(chat.message('Mythic weapon set toggled OFF.')));
+		end
+	
+	elseif (string.lower(args[1]) == 'empyrean') then
+		gcinclude.settings.aeonic = false
+		gcinclude.settings.mythic = false
+		gcinclude.settings.tpBonusWeapon = false
+		if gcinclude.settings.empyrean == false then
+			gcinclude.settings.empyrean = true 
+			print(chat.header('GCinclude'):append(chat.message('Empyrean weapon set toggled ON.')));
+		else
+			gcinclude.settings.empyrean = false
+			print(chat.header('GCinclude'):append(chat.message('Empyrean weapon set toggled OFF.')));
+		end
+	
+	elseif (string.lower(args[1]) == 'killingblow') then
+		local subCmd = args[2] and string.lower(args[2]) or nil
+	
+		if subCmd == 'help' then
+			print(chat.header('GCinclude'):append(chat.message('"/killingblow on" to toggle HPP WS restriction ON.')))
+			print(chat.header('GCinclude'):append(chat.message('"/killingblow off" to toggle HPP WS restriction OFF.')))
+			print(chat.header('GCinclude'):append(chat.message('"/killingblow #" to set the HPP % for a WS to be used under.')))
+			print(chat.header('GCinclude'):append(chat.message('e.g.: /killingblow 20 sets WS to only trigger when target is at or below 20%.')))
+			print(chat.header('GCinclude'):append(chat.message('"/killingblow ws [name]" sets the weaponskill.')))
+		elseif subCmd == 'on' then
+			if not gcinclude.settings.killingBlow then
+				gcinclude.settings.killingBlow = true
+				print(chat.header('GCinclude'):append(chat.message('Killing blow WS restriction is ON.')))
+			else
+				print(chat.header('GCinclude'):append(chat.message('Killing blow restriction already active. Nothing changed.')))
+			end
+		elseif subCmd == 'off' then
+			if gcinclude.settings.killingBlow then
+				gcinclude.settings.killingBlow = false
+				print(chat.header('GCinclude'):append(chat.message('Killing blow WS restriction is OFF.')))
+			else
+				print(chat.header('GCinclude'):append(chat.message('Killing blow restriction not active. Nothing changed.')))
+			end
+		elseif subCmd == 'ws' and args[3] then
+			gcinclude.settings.killingBlowWS = args[3]
+			print(chat.header('GCinclude'):append(chat.message('Killing blow WS set to ' .. gcinclude.settings.killingBlowWS .. '.')))
+		elseif tonumber(args[2]) ~= nil then
+			local value = tonumber(args[2])
+			if value <= 100 then
+				gcinclude.settings.killingBlowPercent = value
+				gcinclude.settings.killingBlow = true
+				print(chat.header('GCinclude'):append(chat.message('Killing blow percent set to ' .. value)))
+			else
+				print(chat.header('GCinclude'):append(chat.message('Please enter a valid percent value (0–100).')))
+			end
+		else
+			print(chat.header('GCinclude'):append(chat.message('Invalid secondary command. Try "/killingblow help" for more information.')))
+		end
+	elseif string.lower(args[1]) == 'main' or string.lower(args[1]) == 'mh' then
+		if string.lower(args[2]) == 'burtgang' then
+			gcinclude.MH = 'Burtgang'
+			print(chat.header('GCinclude'):append(chat.message('MH set to ' .. gcinclude.MH)))
+		elseif string.lower(args[2]) == 'naegling' then
+			gcinclude.MH = 'Naegling'  
+			print(chat.header('GCinclude'):append(chat.message('MH set to ' .. gcinclude.MH)))
+		end
+	elseif (args[1] == 'sub' or args[1] == 'Sub' or args[1] == 'Shield' or args[1] == 'shield' or args[1] == 'OH' or args[1] == 'oh' or args[1] == 'oH' or args[1] == 'Oh') then
+		gcinclude.Sub = args[2]
+		print(chat.header('GCinclude'):append(chat.message('Offhand set to ' .. gcinclude.Sub)))
+	elseif (args[1] == 'dt') then
+		gcdisplay.AdvanceToggle('DTset');
+		toggle = 'DT Set';
+		status = gcdisplay.GetToggle('DTset');
+    elseif (args[1] == 'meleeset') then
+		gcdisplay.AdvanceCycle('MeleeSet');
+		toggle = 'Melee Set';
+		status = gcdisplay.GetCycle('MeleeSet');
+	elseif (#args == 3 and args[1] == 'setcycle') then
+		if gcdisplay.SetCycle(args[2], args[3]) then
+			toggle = args[2];
+			status = gcdisplay.GetCycle(args[2]);
+		end
+	elseif (args[1] == 'kite') then
+		gcdisplay.AdvanceToggle('Kite');
+		toggle = 'Kite Set';
+		status = gcdisplay.GetToggle('Kite');
+	elseif (args[1] == 'th') then
+		gcdisplay.AdvanceToggle('TH');
+		toggle = 'TH Set';
+		status = gcdisplay.GetToggle('TH');	
+	elseif (args[1] == 'gcaspir') then
+		gcinclude.DoAspir();
+	elseif (args[1] == 'gcdrain') then
+		gcinclude.DoDrain();
+	elseif (args[1] == 'warpring') then
+		gcinclude.DoWarpRing();
+	elseif (args[1] == 'telering') then
+		gcinclude.DoTeleRing();
+	elseif (args[1] == 'rrset') then
+		gcinclude.RRSET = not gcinclude.RRSET;
+		toggle = 'Reraise Set';
+		status = gcinclude.RRSET;
+	elseif (args[1] == 'externalphalanx') then
+		if gcinclude.externalPhalanx == false then
+			gcinclude.externalPhalanx = true;
+			print(chat.header('GCinclude'):append(chat.message('External phalanx toggled o n.')));
+		else
+			gcinclude.externalPhalanx = false;
+			print(chat.header('GCinclude'):append(chat.message('External phalanx toggled o f f.')));
+		end
+	elseif (args[1] == 'weaponlock') then
+		if gcinclude.weaponLock == false then
+			gcinclude.weaponLock = true;
+			AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Main') 
+			AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Sub')
+			print(chat.header('GCinclude'):append(chat.message('Weapon lock toggled ON.')));
+		else
+			gcinclude.weaponLock= false;
+			AshitaCore:GetChatManager():QueueCommand(-1, '/lac enable Main') 
+			AshitaCore:GetChatManager():QueueCommand(-1, '/lac enable Sub')
+			print(chat.header('GCinclude'):append(chat.message('Weapon lock toggled OFF.')));
+		end
+	elseif (args[1] == 'phalanxset') then
+		if gcinclude.phalanxSet == false then
+			gcinclude.phalanxSet = true;
+			print(chat.header('GCinclude'):append(chat.message('Phalanx set toggled ON.')));
+			AshitaCore:GetChatManager():QueueCommand(-1, '/p Phalanx set on. <call21>') 
+		else
+			gcinclude.phalanxSet= false;
+			print(chat.header('GCinclude'):append(chat.message('Phalanx set toggled OFF.')));
+		end
+	elseif (string.lower(args[1])  == 'hpset') then
+		if gcinclude.settings.HPSet == true then
+			gcinclude.settings.HPSet = false
+			print(chat.header('GCinclude'):append(chat.message('HP set toggled OFF.')));
+		elseif gcinclude.settings.HPSet == false then
+			gcinclude.settings.HPSet = true
+			print(chat.header('GCinclude'):append(chat.message('HP set toggled ON.')));
+		end
+	elseif (args[1] == 'curecheat') then
+		gcinclude.CureCheat = not gcinclude.CureCheat;
+		toggle = 'Cure Cheat Set';
+		status = gcinclude.CureCheat;
+	elseif (args[1]) == 'plap' then
+		local main = gData.GetEquipment();
+		if main.Main.Name == 'Naegling' then
+			print(chat.header('GCinclude'):append(chat.message('Sending sword plap.')));
+			AshitaCore:GetChatManager():QueueCommand(-1, '/ws "Savage Blade" <t>');
+		elseif main.Main.Name == 'Maxentius' then
+			print(chat.header('GCinclude'):append(chat.message('Sending club plap.')));
+			AshitaCore:GetChatManager():QueueCommand(-1, '/ws "Black Halo" <t>');
+		elseif main.Main.Name == 'Tauret' then
+			print(chat.header('GCinclude'):append(chat.message('Sending dagger plap.')));
+			AshitaCore:GetChatManager():QueueCommand(-1, '/ws "Evisceration" <t>');
+		else
+			print(chat.header('GCinclude'):append(chat.message('Invalid plap weapon.')));
+		end
+	elseif (args[1] == 'craftset') then
+		gcinclude.CraftSet = not gcinclude.CraftSet;
+		toggle = 'Crafting Set';
+		status = gcinclude.CraftSet;
+	elseif (args[1] == 'zeniset') then
+		gcinclude.ZeniSet = not gcinclude.ZeniSet;
+		toggle = 'Zeni Pictures Set';
+		status = gcinclude.ZeniSet;
+	elseif (args[1] == 'fishset') then
+		gcinclude.FishSet = not gcinclude.FishSet;
+		toggle = 'Fishing Set';
+		status = gcinclude.FishSet;
     end
+	if (player.MainJob == 'RDM') or (player.MainJob == 'BLM') or (player.MainJob == 'SCH') or (player.MainJob == 'GEO') then
+		if (args[1] == 'nukeset') then
+			gcdisplay.AdvanceCycle('NukeSet');
+			toggle = 'Nuking Gear Set';
+			status = gcdisplay.GetCycle('NukeSet');
+		elseif (args[1] == 'burst') then
+			gcdisplay.AdvanceToggle('Burst');
+			toggle = 'Magic Burst Set';
+			status = gcdisplay.GetToggle('Burst');
+		end
+		if (player.MainJob == 'BLM') or (player.MainJob == 'SCH') then
+			if (args[1] == 'weapon') then
+				gcdisplay.AdvanceCycle('Weapon');
+				toggle = 'Mage Weapon';
+				status = gcdisplay.GetCycle('Weapon');
+			elseif (args[1] == 'element') then
+				gcdisplay.AdvanceCycle('Element');
+				toggle = 'Spell Element';
+				status = gcdisplay.GetCycle('Element');
+			elseif (args[1] == 'helix') then
+				gcinclude.DoSCHspells('helix');
+			elseif (args[1] == 'weather') then
+				gcinclude.DoSCHspells('weather');
+			elseif (args[1] == 'nuke') then
+				if args[2] == nil then
+					print(chat.header('GCinclude'):append(chat.message('Include a nuke tier. \'/nuke 1\', \'/nuke 2\', etc.')));
+				end
+				gcinclude.DoNukes(args[2]);
+			end
+			if (player.MainJob == 'BLM') then
+				if (args[1] == 'death') then
+					gcdisplay.AdvanceToggle('Death');
+					toggle = 'BLM Death Set';
+					status = gcdisplay.GetToggle('Death');
+				end
+			end
+		end
+	end
+	if (player.MainJob == 'RDM') or (player.MainJob == 'BRD') or (player.MainJob == 'GEO') or (player.MainJob == 'WHM') then
+		if (args[1] == 'fight') then
+			if (gcdisplay.GetToggle('Fight') == false) then
+				AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Main');
+				AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Sub');
+				if (player.MainJob == 'RDM') or (player.MainJob == 'GEO') then AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Range') end
+				if (player.MainJob == 'GEO') or (player.MainJob == 'WHM') then AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Ammo') end
+				gcdisplay.AdvanceToggle('Fight');
+				toggle = 'Mage Weapon Lock';
+				status = gcdisplay.GetToggle('Fight');
+			else
+				AshitaCore:GetChatManager():QueueCommand(-1, '/lac enable Main');
+				AshitaCore:GetChatManager():QueueCommand(-1, '/lac enable Sub');
+				if (player.MainJob == 'RDM') or (player.MainJob == 'GEO') then AshitaCore:GetChatManager():QueueCommand(-1, '/lac enable Range') end
+				if (player.MainJob == 'GEO') or (player.MainJob == 'WHM') then AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable Ammo') end
+				gcdisplay.AdvanceToggle('Fight');
+				toggle = 'Mage Weapon Lock';
+				status = gcdisplay.GetToggle('Fight');
+			end
+		end
+	end
+	if player.MainJob == 'SCH' then
+		--[[
+	Level 1
+    Liquefaction: Stone > Fire, or Thunder > Fire.
+    Scission: Fire > Stone, or Aero > Stone.
+    Reverberation: Stone > Water, or Luminohelix > Water.
+    Detonation: Stone > Aero, or Thunder > Wind.
+    Induration: Water > Blizzard.
+    Impaction: Water > Thunder, or Blizzard > Thunder.
+    Transfixion: Noctohelix > Luminohelix.
+    Compression: Blizzard > Noctohelix.
+	Level 2
+    Fragmentation: Blizzard > Water
+    Fusion: Fire > Thunder
+    Gravitation: Aero > Noctohelix
+    Distortion: Luminohelix > Stone]]
+		local input = (args[1] or ''):lower()
 
-    ------------------------------------------------------------------------
-    -- Display Feedback
-    ------------------------------------------------------------------------
-    if gcinclude.settings.Messages and toggle then
-        gcinclude.Message(toggle, status)
-    end
+		if input == 'skillchains' or input == 'scs' then
+			print(chat.header('Skillchains'):append(chat.message('/sci or /scission       || /liq or /liquefaction')))
+			print(chat.header('Skillchains'):append(chat.message('/rev or /reverberation  || /det or /detonation')))
+			print(chat.header('Skillchains'):append(chat.message('/ind or /induration     || /imp or /impaction')))
+			print(chat.header('Skillchains'):append(chat.message('/tra or /transfixion    || /com or /compression')))
+			print(chat.header('Skillchains'):append(chat.message('/fra or /fragmentation  || /fus or /fusion')))
+			print(chat.header('Skillchains'):append(chat.message('/gra or /gravitation    || /dis or /distortion')))
+		elseif input == 'sci' or input == 'scission' then
+			print(chat.header('Scission'):append(chat.message('Fire -> Stone')))
+			print(chat.header('Scission'):append(chat.message('Aero -> Stone')))
+			print(chat.header('Scission'):append(chat.message('MB: Stone')))
+		elseif input == 'liq' or input == 'liquefaction' then
+			print(chat.header('Liquefaction'):append(chat.message('Stone -> Fire')))
+			print(chat.header('Liquefaction'):append(chat.message('Thunder -> Fire')))
+			print(chat.header('Liquefaction'):append(chat.message('MB: Fire')))
+		elseif input == 'rev' or input == 'reverberation' or input == 'reverb' then
+			print(chat.header('Reverberation'):append(chat.message('Stone -> Water')))
+			print(chat.header('Reverberation'):append(chat.message('Luminohelix -> Water')))
+			print(chat.header('Reverberation'):append(chat.message('MB: Water')))
+		elseif input == 'det' or input == 'detonation' then
+			print(chat.header('Detonation'):append(chat.message('Stone -> Aero')))
+			print(chat.header('Detonation'):append(chat.message('Thunder -> Wind')))
+			print(chat.header('Detonation'):append(chat.message('MB: Aero')))
+		elseif input == 'ind' or input == 'induration' then
+			print(chat.header('Induration'):append(chat.message('Water -> Blizzard')))
+			print(chat.header('Induration'):append(chat.message('MB: Blizzard')))
+		elseif input == 'imp' or input == 'impaction' then
+			print(chat.header('Impaction'):append(chat.message('Water -> Thunder')))
+			print(chat.header('Impaction'):append(chat.message('Blizzard -> Thunder')))
+			print(chat.header('Impaction'):append(chat.message('MB: Thunder')))
+		elseif input == 'tra' or input == 'transfixion' then
+			print(chat.header('Transfixion'):append(chat.message('Noctohelix -> Luminohelix')))
+			print(chat.header('Transfixion'):append(chat.message('MB: Light')))
+		elseif input == 'com' or input == 'compression' then
+			print(chat.header('Compression'):append(chat.message('Blizzard -> Noctohelix')))
+			print(chat.header('Compression'):append(chat.message('MB: Dark')))
+		elseif input == 'fra' or input == 'fragmentation' then
+			print(chat.header('Fragmentation'):append(chat.message('Blizzard -> Water')))
+			print(chat.header('Fragmentation'):append(chat.message('MB: Wind/Lightning')))
+		elseif input == 'fus' or input == 'fusion' then
+			print(chat.header('Fusion'):append(chat.message('Fire -> Thunder')))
+			print(chat.header('Fusion'):append(chat.message('MB: Fire/Light')))
+		elseif input == 'gra' or input == 'gravitation' then
+			print(chat.header('Gravitation'):append(chat.message('Aero -> Noctohelix')))
+			print(chat.header('Gravitation'):append(chat.message('MB: Stone/Dark')))
+		elseif input == 'dis' or input == 'distortion' then
+			print(chat.header('Distortion'):append(chat.message('Luminohelix -> Stone')))
+			print(chat.header('Distortion'):append(chat.message('MB: Blizzard/Water')))
+		end
+	end
+	if (player.MainJob == 'PLD') or (player.MainJob == 'RUN') then
+		if (args[1] == 'sir') then
+			gcdisplay.AdvanceToggle('SIR');
+			toggle = 'Spell Interupt Set';
+			status = gcdisplay.GetToggle('SIR');
+		end
+		if (args[1] == 'tankset') then
+			gcdisplay.AdvanceCycle('TankSet');
+			toggle = 'Tank Gear Set';
+			status = gcdisplay.GetCycle('TankSet');
+		end
+	end
+	if (player.MainJob == 'SAM') or (player.MainJob == 'NIN') then
+		if string.lower(args[1]) == 'mwep' then
+			gcdisplay.AdvanceCycle('MWep');
+			toggle = 'MWep';
+			status = gcdisplay.GetCycle('MWep');
+		end
+		if (args[1] == 'proc') then
+			gcdisplay.AdvanceToggle('PROC');
+			toggle = 'Low Damage PROC Set';
+			status = gcdisplay.GetToggle('PROC');
+			if (player.MainJob == 'NIN') then
+				if gcdisplay.GetToggle('PROC') == true then
+					AshitaCore:GetChatManager():QueueCommand(-1, '/lac disable ammo');
+				else
+					AshitaCore:GetChatManager():QueueCommand(-1, '/lac enable ammo');
+				end
+			end
+		end
+	end
+	if (player.MainJob == 'PUP') then
+		if (args[1] == 'pupmode') then
+			gcdisplay.AdvanceCycle('PupMode');
+			toggle = 'Puppet Mode';
+			status = gcdisplay.GetCycle('PupMode');
+		end
+	end
+	if (player.MainJob == 'BRD') then
+		if (args[1] == 'forcestring') then
+			gcdisplay.AdvanceToggle('String');
+			toggle = 'BRD Forced Harp';
+			status = gcdisplay.GetToggle('String');
+		end
+	end
+	if (player.MainJob == 'COR') then
+		if string.lower(args[1]) == 'mwep' then
+			gcdisplay.AdvanceCycle('MWep');
+			toggle = 'MWep';
+			status = gcdisplay.GetCycle('MWep');
+		elseif string.lower(args[1]) == 'ammo' or string.lower(args[1]) == 'bullet' then
+			gcdisplay.AdvanceCycle('Ammo');
+			toggle = 'Ammo';
+			status = gcdisplay.GetCycle('Ammo');
+		elseif string.lower(args[1]) == 'gun' or string.lower(args[1]) == 'rwep' then
+			gcdisplay.AdvanceCycle('RWep');
+			toggle = 'RWep';
+			status = gcdisplay.GetCycle('RWep');
+		elseif (args[1] == 'cormsg') then
+			if gcinclude.CORmsg == true then
+				gcinclude.CORmsg = false;
+				print(chat.header('GCinclude'):append(chat.message('COR Roll messages will no longer show')));
+			else
+				gcinclude.CORmsg = true;
+				print(chat.header('GCinclude'):append(chat.message('COR Roll messages will show now')));
+			end
+		end
+	end
+	if (player.MainJob == 'BLU') then
+		if (args[1] == 'cj') then
+			gcdisplay.AdvanceToggle('CJmode');
+			toggle = 'BLU Cruel Joke Set';
+			status = gcdisplay.GetToggle('CJmode');
+		end
+	end
+	if (player.MainJob == 'SMN') then
+		if (args[1] == 'siphon') then
+			gcinclude.DoSiphon();
+		end
+	end
+
+	if gcinclude.settings.Messages then
+		gcinclude.Message(toggle, status)
+	end
 end
-
 
 function gcinclude.CheckCommonDebuffs()
 	local weakened = gData.GetBuffCount('Weakened');
@@ -478,6 +725,56 @@ function gcinclude.CheckAbilityRecast(check)
 	end
 
 	return RecastTime;
+end
+
+function gcinclude.AutoHaste()
+    local function hasAnyBuff(...)
+        for _, buff in ipairs{...} do
+            if gData.GetBuffCount(buff) > 0 then
+                return true
+            end
+        end
+        return false
+    end
+
+    -- Buff presence checks
+    local geoHaste = hasAnyBuff('Indi-Haste', 'Geo-Haste') and ((306 + 11 * gcinclude.settings.geoBonus) / 1024) or 0
+
+    -- Scalar buffs
+    local advMarch = gData.GetBuffCount('Advancing March') * ((108 + 11 * gcinclude.settings.brdBonus) / 1024)
+    local vicMarch = gData.GetBuffCount('Victory March') * ((163 + 16 * gcinclude.settings.brdBonus) / 1024)
+    local honMarch = gData.GetBuffCount('Honor March') * ((126 + 12 * math.min(gcinclude.settings.brdBonus, 4)) / 1024)
+    local embrava = gData.GetBuffCount(228) * gcinclude.settings.embravaValue
+    local mightyGuard = gData.GetBuffCount(604) * gcinclude.settings.haste1Value
+    local haste1 = gData.GetBuffCount(33) * gcinclude.settings.haste1Value
+    local haste2 = gData.GetBuffCount(580) * gcinclude.settings.haste2Value 
+
+    -- JA buffs
+    local hasso = 0
+    local hasteSamba = 0
+    local desperateBlows = 0
+
+    if player.MainJob == 'SAM' or player.SubJob == 'SAM' then
+        hasso = gData.GetBuffCount(353) * (101 / 1024)
+    end
+    if gcinclude.settings.dncHasteSamba == true then
+        hasteSamba = 101 / 1024
+    elseif player.SubJob == 'DNC' then
+        hasteSamba = gData.GetBuffCount(370) * (51 / 1024)
+    end
+    if player.SubJob == 'DRK' then
+        desperateBlows = gData.GetBuffCount(64) * (154 / 1024)
+    elseif player.MainJob == 'DRK' then 
+        desperateBlows = gData.GetBuffCount(64) * (256 / 1024)
+    end
+
+    local curMagicHaste = math.min(
+        haste1 + haste2 + advMarch + vicMarch + honMarch + embrava + mightyGuard + geoHaste,
+        gcinclude.settings.magicHasteCap)
+    local curJAHaste = hasso + hasteSamba + desperateBlows
+    local totalCurHaste = curMagicHaste + curJAHaste
+
+    return totalCurHaste
 end
 
 function gcinclude.CheckLockingRings()
