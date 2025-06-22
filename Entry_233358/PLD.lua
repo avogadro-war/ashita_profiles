@@ -3,8 +3,6 @@ gcinclude = gFunc.LoadFile('common\\gcinclude.lua');
 
 local sets = {
     Idle = {
-        Main = 'Burtgang',
-        Sub = 'Duban',
         Ammo = 'Staunch Tathlum +1',
         Head = 'Chev. Armet +2',
         Neck = 'Kgt. Beads +2',
@@ -164,18 +162,17 @@ local sets = {
     },
     Enmity = {
         Ammo = 'Sapience Orb',--2
-        Ear2 = 'Odnowa Earring +1',--4
         Waist = 'Creed Baudrier',--5
         Head = 'Loess Barbuta +1',--9
         Body = 'Souv. Cuirass +1',--10
-        Legs = 'Souv. Diechlings +1',--7
-        Feet = 'Chev. Sabatons +2',--15
+        Legs = 'Souv. Diechlings +1',--9
+        Feet = 'Chev. Sabatons +2',--13
         Back = { Name = 'Rudianos\'s Mantle', Augment = { [1] = 'Phys. dmg. taken -10%', [2] = 'Mag. Eva.+20', [3] = 'Eva.+20', [4] = 'HP+60', [5] = 'Enmity+10' } },--10
         Neck = 'Moonlight Necklace', -- 15
         Ring1 = 'Apeile Ring +1',--5~9
-        Ring2 = 'Eihwaz Ring',-- 5~9
+        Ring2 = 'Eihwaz Ring', --5
         Ear1 = 'Friomisi Earring',--2
-        Ear2 = 'Odnowa Earring +1',--4
+        Ear2 = 'Cryptic Earring',--4
     },
 
     Cure = {
@@ -183,7 +180,6 @@ local sets = {
         Head = 'Souv. Schaller +1', --15rec
         Body = 'Souv. Cuirass +1',--sir10
         Neck = 'Moonlight Necklace', -- 15
-        --Ear1 = 'Tuisto Earring',
         Ear1 = 'Tuisto Earring',
         Ear2 = 'Odnowa Earring +1', -- 6
         Hands = 'Macabre Gaunt. +1', -- 11
@@ -385,6 +381,19 @@ local sets = {
         Legs = 'Souv. Diechlings +1',
         Feet = 'Cab. Leggings +3',
     },
+    Duban = {
+        Sub = 'Duban',
+    },
+    Aegis = {
+        Sub = 'Aegis',
+    },
+    Burtgang = {
+        Main = 'Burtgang',
+    },
+    Naegling = {
+        Main = 'Naegling',
+    },
+
     ['fastcastcloak'] = {
         Main = 'Burtgang',
         Sub = { Name = 'Priwen', AugPath='A' },
@@ -505,6 +514,26 @@ profile.HandleDefault = function()
 	if (cover >= 1) then
 		gFunc.EquipSet(sets.Fealty); -- same set as fealty
 	end
+
+    --main wep
+    local mainHandSets = {
+    ['Burtgang']  = sets.Burtgang,
+    ['Naegling']  = sets.Naegling,
+    }
+
+    -- Off Hand weapon sets
+    local offHandSets = {
+    ['Duban'] = sets.Duban,
+    ['Aegis'] = sets.Aegis,
+    }
+
+    -- Equip main hand set if it exists
+    local mhSet = mainHandSets[gcdisplay.GetCycle('MH')]
+    if mhSet then gFunc.EquipSet(mhSet) end
+
+    -- Equip off hand set if it exists
+    local ohSet = offHandSets[gcdisplay.GetCycle('OH')]
+    if ohSet then gFunc.EquipSet(ohSet) end
 	
     gcinclude.CheckDefault();
     if (gcdisplay.GetToggle('DTset') == true) then gFunc.EquipSet(sets.Dt) end;
@@ -513,20 +542,26 @@ end
 
 profile.HandleAbility = function()
     local ability = gData.GetAction();
+    local name = ability.Name
+
     gFunc.EquipSet(sets.Enmity)
-	if string.match(ability.Name, 'Fealty') then
-		gFunc.EquipSet(sets.Fealty);
-    elseif string.match(ability.Name, 'Sentinel') then
-		gFunc.EquipSet(sets.Sentinel);
-    elseif string.match(ability.Name, 'Shield Bash') or string.match(ability.Name, 'Chivalry') then
-		gFunc.EquipSet(sets.Bash);
-    elseif string.match(ability.Name, 'Invincible') then
-		gFunc.EquipSet(sets.Invincible);
-    elseif string.match(ability.Name, 'Cover') then
-		gFunc.EquipSet(sets.Cover);
-    elseif string.match(ability.Name, 'Rampart') then
-		gFunc.EquipSet(sets.Rampart);
-	end
+
+    local abilityMap = {
+        ['Fealty']          = sets.Fealty,
+        ['Sentinel']        = sets.Sentinel,
+        ['Shield Bash']     = sets.Bash,
+        ['Chivalry']        = sets.Bash,
+        ['Invincible']      = sets.Invincible,
+        ['Cover']           = sets.Cover,
+        ['Rampart']         = sets.Rampart,
+    }
+
+    for key, set in pairs(abilityMap) do
+        if string.match(name, key) then
+            gFunc.EquipSet(set)
+            break
+        end
+    end
 
     gcinclude.CheckCancels();
 end
@@ -552,29 +587,35 @@ end
 
 profile.HandleMidcast = function()
     local spell = gData.GetAction();
+    local name = spell.Name
 
-    if string.contains(spell.Name, 'Cur') then
-        gFunc.EquipSet(sets.Cure);
-    elseif string.match(spell.Name, 'Phalanx') then
-        gFunc.EquipSet(sets.PhalanxSet_Self);
-    elseif string.match(spell.Name, 'Reprisal') then
-        gFunc.EquipSet(sets.Reprisal);
-        return;--dont want to override this with SIR even with SIR toggle
-    elseif string.match(spell.Name, 'Flash') then
-        gFunc.EquipSet(sets.Enmity);
-        return;
-    elseif string.match(spell.Name, 'Jettatura') then
-        gFunc.EquipSet(sets.Enmity);
-    elseif string.match(spell.Name, 'Foil') then
-        gFunc.EquipSet(sets.Enmity);
-    else
-        gFunc.EquipSet(sets.Enmity);
+    local spellMap = {
+        ['Cur']       = sets.Cure,
+        ['Phalanx']   = sets.PhalanxSet_Self,
+        ['Reprisal']  = sets.Reprisal,
+        ['Flash']     = sets.Enmity,
+        ['Jettatura'] = sets.Enmity,
+        ['Foil']      = sets.Enmity,
+    }
+
+    for key, set in pairs(spellMap) do
+        if string.match(name, key) then
+            gFunc.EquipSet(set)
+            -- Handle early return cases
+            if key == 'Reprisal' or key == 'Flash' then return end
+            break
+        end
     end
-    if (gcdisplay.GetToggle('SIR') == true) then
+
+    -- Default fallback if no match found above
+    if not (string.match(name, 'Cur') or string.match(name, 'Phalanx') or
+            string.match(name, 'Reprisal') or string.match(name, 'Flash') or
+            string.match(name, 'Jettatura') or string.match(name, 'Foil')) then
+        gFunc.EquipSet(sets.Enmity)
+    end
+
+    if gcdisplay.GetToggle('SIR') == true then
         gFunc.EquipSet(sets.SIR);
-    end
-	if (gcdisplay.GetToggle('TH') == true) then 
-        gFunc.EquipSet(sets.TH) 
     end
 end
 
@@ -588,32 +629,47 @@ profile.HandleMidshot = function()
 end
 
 profile.HandleWeaponskill = function()
-    local canWS = gcinclude.CheckWsBailout();
-    if (canWS == false) then gFunc.CancelAction() return;
-    else
-        local ws = gData.GetAction();
-    
-        gFunc.EquipSet(sets.Ws_Default)
-        if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-        gFunc.EquipSet('Ws_' .. gcdisplay.GetCycle('MeleeSet')) end
-   
-        if string.match(ws.Name, 'Chant du Cygne') then
-            gFunc.EquipSet(sets.Chant_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Chant_' .. gcdisplay.GetCycle('MeleeSet')); end
-	    elseif string.match(ws.Name, 'Savage Blade') or string.match(ws.Name, 'Knights of Round') then
-            gFunc.EquipSet(sets.Savage_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Savage_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Atonement') then
-            gFunc.EquipSet(sets.Atone_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Atone_' .. gcdisplay.GetCycle('MeleeSet')); end
-        elseif string.match(ws.Name, 'Aeolian Edge') then
-            gFunc.EquipSet(sets.Aedge_Default)
-            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Aedge_' .. gcdisplay.GetCycle('MeleeSet')); end
+    if not gcinclude.CheckWsBailout() then
+        gFunc.CancelAction()
+        return
+    end
+
+    local ws = gData.GetAction()
+    local wsName = ws.Name:lower()
+    local meleeSet = gcdisplay.GetCycle('MeleeSet')
+
+    local function equipSet(setPrefix)
+        gFunc.EquipSet(sets[setPrefix .. '_Default'])
+        if meleeSet ~= 'Default' and sets[setPrefix .. '_' .. meleeSet] then
+            gFunc.EquipSet(sets[setPrefix .. '_' .. meleeSet])
         end
+    end
+
+    local wsMap = {
+        ['chant du cygne']    = 'Chant',
+        ['savage blade']      = 'Savage',
+        ['knights of round']  = 'Savage',
+        ['atonement']         = 'Atone',
+        ['aeolian edge']      = 'Aedge'
+    }
+
+    -- Default WS set
+    gFunc.EquipSet(sets.Ws_Default)
+    if meleeSet ~= 'Default' and sets['Ws_' .. meleeSet] then
+        gFunc.EquipSet(sets['Ws_' .. meleeSet])
+    end
+
+    -- Specific WS overrides
+    for key, setPrefix in pairs(wsMap) do
+        if wsName:match(key) then
+            equipSet(setPrefix)
+            break
+        end
+    end
+
+    -- Optional: Add Hachirin logic for elemental WS
+    if ws.Element then
+        profile.Hachirin(ws.Element)
     end
 end
 
