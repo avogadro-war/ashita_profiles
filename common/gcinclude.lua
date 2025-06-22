@@ -1,4 +1,15 @@
 local gcinclude = T{};
+S = function(list)
+    local set = {}
+    for _, v in ipairs(list) do
+        set[v] = true
+    end
+    return {
+        contains = function(_, val)
+            return set[val]
+        end
+    }
+end
 
 --[[
 Only edit the next two small sections here. See the readme on my github for more information on usages for my profiles.
