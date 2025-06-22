@@ -202,23 +202,6 @@ local sets = {
     Boost = {
         Waist = 'Ask Sash',
     },
-
-    ['shijinnn'] = {
-        Main = 'Verethragna',
-        Ammo = 'Knobkierrie',
-        Head = { Name = 'Nyame Helm', AugPath='B' },
-        Neck = { Name = 'Mnk. Nodowa +2', AugPath='A' },
-        Ear1 = 'Sherida Earring',
-        Ear2 = 'Cessance Earring',
-        Body = { Name = 'Nyame Mail', AugPath='B' },
-        Hands = { Name = 'Nyame Gauntlets', AugPath='B' },
-        Ring1 = 'Epona\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Segomo\'s Mantle', Augment = { [1] = '"Dbl.Atk."+10', [2] = 'Phys. dmg. taken -10%', [3] = 'Accuracy+20', [4] = 'Attack+20', [5] = 'DEX+20' } },
-        Waist = 'Moonbow Belt +1',
-        Legs = { Name = 'Nyame Flanchard', AugPath='B' },
-        Feet = { Name = 'Nyame Sollerets', AugPath='B' },
-    },
 };
 profile.Sets = sets;
 
@@ -259,6 +242,28 @@ profile.HandleDefault = function()
         gFunc.EquipSet(sets.Tp_Default);
         if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
             gFunc.EquipSet('Tp_' .. gcdisplay.GetCycle('MeleeSet')) end
+        if gcdisplay.GetToggle('AutoMA') then
+
+            local maGearPool = {
+                -- Priority, Gear Slot, Item Name, Martial Arts value
+                {1, 'Body', 'Bhikku Cyclas +2', 7},
+                {2, 'Ear2', 'Mache Earring +1', 13},
+                --{3, 'Ear1', 'Mache Earring +1', 13},
+            }
+            local maSet, totalMA = JHaste.GetDWGearSet(maGearPool)
+            if maSet then
+                if next(maSet) == nil then
+        -- Optionally unequip all slots that might have had MA gear.
+                    gFunc.Equip('Ear1', nil)
+                    gFunc.Equip('Ear2', nil)
+                    gFunc.Equip('Body', nil)
+                    --etc
+                end
+                for slot, item in pairs(maSet) do
+                    gFunc.Equip(slot, item)
+                end
+            end
+        end
         if (impetus >= 1) then gFunc.EquipSet(sets.Impetus) end
         if (footwork >= 1) then gFunc.EquipSet(sets.Footwork) end
 		if (gcdisplay.GetToggle('TH') == true) then gFunc.EquipSet(sets.TH) end
@@ -275,23 +280,23 @@ end
 
 profile.HandleAbility = function()
     local ability = gData.GetAction();
+    local name = ability.Name
 
-    if string.match(ability.Name, 'Focus') then 
-        gFunc.EquipSet(sets.Focus);
-    elseif string.match(ability.Name, 'Dodge') then 
-        gFunc.EquipSet(sets.Dodge);
-    elseif string.match(ability.Name, 'Hundred Fists') then 
-        gFunc.EquipSet(sets.HundredFists);
-    elseif string.match(ability.Name, 'Chakra') then 
-        gFunc.EquipSet(sets.Chakra);
-    elseif string.match(ability.Name, 'Footwork') then 
-        gFunc.EquipSet(sets.FootworkJA);
-    elseif string.match(ability.Name, 'Counterstance') or string.match(ability.Name, 'Mantra') then
-         gFunc.EquipSet(sets.Counterstance);
-    elseif string.contains(ability.Name, 'Formless Strikes') then 
-        gFunc.EquipSet(sets.FormlessStrikes)
-    elseif string.match(ability.Name, 'Boost') then 
-        gFunc.EquipSet(sets.Boost); 
+    local abilitySets = {
+        ['Focus']            = sets.Focus,
+        ['Dodge']            = sets.Dodge,
+        ['Hundred Fists']    = sets.HundredFists,
+        ['Chakra']           = sets.Chakra,
+        ['Footwork']         = sets.FootworkJA,
+        ['Counterstance']    = sets.Counterstance,
+        ['Mantra']           = sets.Counterstance,
+        ['Formless Strikes'] = sets.FormlessStrikes,
+        ['Boost']            = sets.Boost,
+    }
+
+    local setToEquip = abilitySets[name]
+    if setToEquip then
+        gFunc.EquipSet(setToEquip)
     end
 
     gcinclude.CheckCancels();
