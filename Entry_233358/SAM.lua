@@ -1,6 +1,6 @@
 local profile = {};
-gcinclude = gFunc.LoadFile('common\\gcinclude.lua');
-JHaste = gFunc.LoadFile('common\\J-Haste.lua')
+local gcinclude = require('common/gcinclude');
+local JHaste = require('common/J-Haste')
 
 local sets = {
     Idle = {
@@ -419,7 +419,10 @@ profile.OnLoad = function()
 end
 
 profile.OnUnload = function()
-    gcinclude.Unload();
+    if gcinclude and gcinclude.Unload then gcinclude.Unload() end
+    package.loaded['common/gcinclude'] = nil
+    package.loaded['common/gcdisplay'] = nil
+    package.loaded['common/J-Haste'] = nil
 end
 
 profile.HandleCommand = function(args)

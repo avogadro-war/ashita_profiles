@@ -1,5 +1,6 @@
 local profile = {};
-gcinclude = gFunc.LoadFile('common\\gcinclude.lua');
+local gcinclude = require('common/gcinclude');
+local JHaste = require('common/J-Haste')
 
 local sets = {
     Idle = {
@@ -107,7 +108,7 @@ local sets = {
     },
     Precast_Grimoire = {
         Head = 'Peda. M.Board +3',
-        Feet = 'Acad. Loafers +3',
+        Feet = 'Acad. Loafers +4',
     },
 
     Precast = {
@@ -145,7 +146,7 @@ local sets = {
     Head = 'Arbatel Bonnet +3',
     Neck = 'Argute Stole +2',
     Ear1 = 'Friomisi Earring',
-    Ear2 = 'Arbatel Earring',
+    Ear2 = 'Arbatel Earring +1',
     Body = 'Arbatel Gown +3',
     Hands = 'Arbatel Bracers +3',
     Ring1 = 'Mallquis Ring',
@@ -273,7 +274,7 @@ local sets = {
         Head = 'Arbatel Bonnet +3',
         Neck = 'Argute Stole +2',
         Ear1 = 'Friomisi Earring',
-        Ear2 = 'Arbatel Earring',
+        Ear2 = 'Arbatel Earring +1',
         Body = 'Arbatel Gown +3',
         Hands = 'Arbatel Bracers +3',
         Ring1 = 'Mallquis Ring',
@@ -294,7 +295,7 @@ local sets = {
         Head = 'Agwu\'s Cap', -- 0 and 4
         Neck = 'Argute Stole +2', -- 7 and 0
         Ear1 = 'Friomisi Earring',
-        Ear2 = 'Arbatel Earring',
+        Ear2 = 'Arbatel Earring +1',
         Body = 'Arbatel Gown +3', -- 10 and 0
         Hands = 'Arbatel Bracers +3', -- 0 and 6
         Ring1 = 'Mujin Band', -- 0 and 5
@@ -311,7 +312,7 @@ local sets = {
         Head = 'Arbatel Bonnet +3',
         Neck = 'Argute Stole +2',                                               
         Ear1 = 'Friomisi Earring',
-        Ear2 = 'Arbatel Earring',
+        Ear2 = 'Arbatel Earring +1',
         Body = 'Arbatel Gown +3',
         Hands = 'Arbatel Bracers +3',
         Ring1 = 'Mallquis Ring',    
@@ -337,7 +338,7 @@ local sets = {
         Head = 'Pixie Hairpin +1',
         Neck = 'Argute Stole +1',
         Ear1 = 'Regal Earring',
-        Ear2 = 'Arbatel Earring',
+        Ear2 = 'Arbatel Earring +1',
         Body = 'Seidr Cotehardie',
         Hands = 'Amalric Gages +1',
         Ring1 = 'Stikini Ring +1',--freke ring
@@ -509,7 +510,10 @@ profile.OnLoad = function()
 end
 
 profile.OnUnload = function()
-    gcinclude.Unload();
+    if gcinclude and gcinclude.Unload then gcinclude.Unload() end
+    package.loaded['common/gcinclude'] = nil
+    package.loaded['common/gcdisplay'] = nil
+    package.loaded['common/J-Haste'] = nil
 end
 
 profile.HandleCommand = function(args)

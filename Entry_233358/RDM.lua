@@ -1,617 +1,331 @@
 local profile = {};
 gcinclude = gFunc.LoadFile('common\\gcinclude.lua');
-JHaste = gFunc.LoadFile('common\\J-Haste.lua')
-
---!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! USE /lac addset <name> TO FIND CORRECT AUGMENT SYNTAX IF REQUIRED.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!--
---!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! USE /lac addset <name> TO FIND CORRECT AUGMENT SYNTAX IF REQUIRED.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!--
---!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! USE /lac addset <name> TO FIND CORRECT AUGMENT SYNTAX IF REQUIRED.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!--
---!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! USE /lac addset <name> TO FIND CORRECT AUGMENT SYNTAX IF REQUIRED.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!--
-
-local dwGearPool = {
-    -- Priority, Gear Slot, Item Name, Dual Wield value
-    {1, 'Back', { Name = "Sucellos's Cape", Augment = { ['"Dual Wield"+10'] = true } }, 10},
-    {2, 'Ear1', 'Eabani Earring', 4},
-    {3, 'Ear2', 'Suppanomimi', 5},
-    --{4, 'Waist', 'Reiki Yotai', 7},
-}
 
 local sets = {
-    Idle = { --49 dt, total: 49 pdt 39 mdt
-		Ammo = 'Staunch Tathlum +1', --3 dt
-        Head = 'Viti. Chapeau +4',
+    Idle = {
+        Main = 'Bolelabunga',
+        Sub = 'Genmei Shield',
+        Range = 'Ullr',
+        Head = 'Malignance Chapeau',
         Neck = 'Warder\'s Charm +1',
         Ear1 = 'Eabani Earring',
-        Ear2 = 'Hearty Earring',
-        Body = 'Lethargy Sayon +3', --14 dt
-        Hands = 'Nyame Gauntlets', --7 dt
+        Ear2 = 'Etiolation Earring',
+        Body = 'Atrophy Tabard +2',
+        Hands = 'Nyame Gauntlets',
         Ring1 = 'Stikini Ring +1',
-        Ring2 = 'Shneddick Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Phys. dmg. taken -10%', [2] = 'Accuracy+30', [3] = 'Attack+20', [4] = '"Dual Wield"+10', [5] = 'DEX+20' } }, --10 pdt
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = 'Solemnity Cape',
         Waist = 'Carrier\'s Sash',
-        Legs = 'Nyame Flanchard', --8 dt
-        Feet = 'Nyame Sollerets', --7 dt
+        Legs = 'Nyame Flanchard',
+        Feet = 'Nyame Sollerets',
     },
     Resting = {},
     Idle_Regen = {
-		Ring1 = 'Chirich Ring',
-        Neck = 'Sanctity Necklace',
+        Head = 'Befouled Crown',
+        Neck = 'Bathy Choker +1',
+        Ear1 = 'Infused Earring',
+        Ring2 = 'Chirich Ring +1',
     },
     Idle_Refresh = {
-		Neck = 'Loricate Torque +1',
-		Hands = 'Volte Gloves',
-		Legs = { Name = 'Chironic Hose', Augment = { [1] = '"Mag. Atk. Bns."+7', [2] = 'Mag. Acc.+7', [3] = 'Accuracy+10', [4] = '"Refresh"+2', [5] = 'AGI+8', [6] = 'Attack+12' } },
-    },
-	   Lockstyle = { 
-	   --Head = 'Adenium Masque',
-       -- Body = 'Adenium Suit',
-		Head = 'Leth. Chappel +2',
-		Body = 'Lethargy Sayon +3',
-		Hands = 'Leth. Ganth. +3',
-		Legs = 'Leth. Fuseau +3',
-		Feet = 'Leth. Houseaux +3',
-
+        Head = 'Viti. Chapeau +2',
+        Body = 'Atrophy Tabard +2',
+        Feet = 'Volte Gaiters',
     },
     Town = {
-        
+        Main = 'Excalibur',
+        Sub = 'Genmei Shield',
+        Range = 'Ullr',
+        Head = 'Atro. Chapeau +1',
+        Neck = 'Bathy Choker +1',
+        Ear1 = 'Eabani Earring',
+        Ear2 = 'Etiolation Earring',
+        Body = 'Viti. Tabard +3',
+        Hands = 'Malignance Gloves',
+        Ring1 = 'Defending Ring',
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = 'Solemnity Cape',
+        Waist = { Name = 'Sailfi Belt +1', AugPath='A' },
+        Legs = { Name = 'Carmine Cuisses +1', AugPath='D' },
+        Feet = 'Volte Gaiters',
     },
 
     Dt = {
-		Ammo = 'Staunch Tathlum +1',
-        Head = 'Nyame Helm',
-		Body = 'Nyame Mail',
-		Hands = 'Nyame Gauntlets',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Phys. dmg. taken -10%', [2] = 'Accuracy+30', [3] = 'Attack+20', [4] = '"Dual Wield"+10', [5] = 'DEX+20' } }, --10 pdt
-        Legs = 'Nyame Flanchard',
-		Feet = 'Nyame Sollerets',
-		Ring1 = 'Defending Ring',
-
+        Sub = 'Genmei Shield',
+        Ammo = 'Staunch Tathlum',
+        Head = 'Malignance Chapeau',
+        Neck = { Name = 'Loricate Torque +1', AugPath='A' },
+        Ear1 = { Name = 'Odnowa Earring +1', AugPath='A' },
+        Ear2 = 'Etiolation Earring',
+        Body = 'Nyame Mail',
+        Hands = 'Malignance Gloves',
+        Ring1 = 'Defending Ring',
+        Ring2 = { Name = 'Gelatinous Ring +1', AugPath='A' },
+        Back = 'Solemnity Cape',
+        Waist = 'Flume Belt +1',
+        Legs = { Name = 'Carmine Cuisses +1', AugPath='D' },
+        Feet = 'Nyame Sollerets',
     },
 
-    Tp_Default = { --51 dt, total: 51 pdt 41 mdt
-		Ammo = 'Coiste Bodhar',
-		--Ammo = 'Sroda Tathlum',
-        Head = 'Nyame Helm', --7 dt
+    Tp_Default = {
+        Main = 'Excalibur',
+        Sub = 'Genmei Shield',
+        Ammo = 'Coiste Bodhar',
+        Head = 'Malignance Chapeau',
         Neck = 'Anu Torque',
-        Ear1 = 'Dedition Earring',
-        Ear2 = 'Sherida Earring',
-        Body = 'Lethargy Sayon +3', --14 dt
-		--Hands = 'Aya. Manopolas +2', --3 dt
-		Hands = 'Bunzi\'s Gloves', 
-        Ring1 = 'Defending Ring', --10 dt
-        Ring2 = 'Chirich Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Phys. dmg. taken -10%', [2] = 'Accuracy+30', [3] = 'Attack+20', [4] = '"Dual Wield"+10', [5] = 'DEX+20' } }, --10 pdt
-        Waist = 'Sailfi Belt +1',
-        Legs = 'Malignance Tights', --7 dt
-        Feet = 'Leth. Houseaux +3', 
-		
+        Ear1 = 'Sherida Earring',
+        Ear2 = 'Telos Earring',
+        Body = 'Nyame Mail',
+        Hands = 'Malignance Gloves',
+        Ring1 = 'Ilabrat Ring',
+        Ring2 = 'Petrov Ring',
+        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Accuracy+20', [2] = 'Attack+20', [3] = 'DEX+20' } },
+        Waist = { Name = 'Sailfi Belt +1', AugPath='A' },
+        Legs = 'Carmine Cuisses +1',
+        Feet = 'Nyame Sollerets',
     },
     Tp_Hybrid = {
-        
+        Ring1 = 'Defending Ring',
     },
     Tp_Acc = {
-
+        Ring1 = 'Cacoethic Ring +1',
+        Ring2 = 'Chirich Ring +1',
     },
 
 
-    Precast = { --38 from traits, 42 needed from gear to cap(80).
-		Ammo = 'Impatiens', --2 QUICKCAST
-		Ring2 = 'Meridian Ring',
-		Waist = 'Plat. Mog. Belt',
-		Ear1 = 'Etiolation Earring', --1
-		Feet = 'Nyame Sollerets',
-		Hands = 'Nyame Gauntlets',
-		Back = 'Twilight Cape', --replace with QUICKCAST cape when you can
-		Head = 'Atrophy Chapeau +3', --16
-		Ear2 = 'Loquac. Earring', --2
-		Body = 'Viti. Tabard +3', --15
-		Ring1 = 'Lebeche Ring', --2 QUICKCAST
-		Waist = 'Witful Belt', --3, 3 QUICKCAST
-		Legs = 'Aya. Cosciales +2', --6
-		
+    Precast = {--30 from traits, 53 from gear
+        Head = 'Atro. Chapeau +1',--12
+        Neck = 'Baetyl Pendant',--4
+        Ear1 = 'Etiolation Earring',--1
+        Ear2 = 'Malignance Earring',--4
+        Body = 'Viti. Tabard +3',--15
+        Ring1 = 'Kishar Ring',--4
+        Ring2 = 'Prolix Ring',--2
+        Waist = 'Embla Sash',--5
+        Legs = { Name = 'Carmine Cuisses +1', AugPath='D' },--SIR
+        Feet = 'Volte Gaiters',--6
     },
     Cure_Precast = {
-
+        Ear1 = 'Mendi. Earring',
+        Feet = 'Vanya Clogs',
     },
     Enhancing_Precast = {
-
+        Waist = 'Siegel Sash',
     },
     Stoneskin_Precast = {
-
+        Head = 'Umuthi Hat',
+        Waist = 'Siegel Sash',
     },
 
 
     Cure = {--I cap is 50, II cap is 30
-		Ammo = 'Clarus Stone',
-		Ring1 = 'Meridian Ring',
-		Waist = 'Plat. Mog. Belt',
-		Ear1 = 'Eabani Earring',
-		Neck = 'Sanctity Necklace',
-		Head = 'Bunzi\'s Hat',
-		Body = 'Bunzi\'s Robe', --15
-        Hands = 'Telchine Gloves', --10
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Legs = 'Atrophy Tights +3', --11
-		Feet = 'Bunzi\'s Sabots',
-		Ear2 = 'Meili Earring',
-		Ring2 = 'Mephitas\'s Ring +1',
-		
-		
+        Main = 'Bunzi\'s Rod',--I 30
+        Sub = 'Ammurapi Shield',
+        Ammo = 'Pemphredo Tathlum',
+        Neck = 'Nodens Gorget',--I 5
+        Ear1 = 'Mendi. Earring',--I 5
+        Ear2 = 'Regal Earring',
+        Hands = 'Telchine Gloves',--I 9
+        Ring1 = 'Stikini Ring +1',
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = 'Solemnity Cape',--I 7
+        Waist = 'Rumination Sash',
+        Legs = 'Atrophy Tights +1',--I 10 and skill
+        Feet = { Name = 'Medium\'s Sabots', Augment = { [1] = 'MND+6', [2] = '"Conserve MP"+5', [3] = 'MP+40', [4] = '"Cure" potency +3%' } },
     },
     Self_Cure = {--cap 30
-		Waist = 'Gishdubar Sash',
-		
+        Waist = 'Gishdubar Sash',
     },
     Regen = {
-		Ammo = 'Clarus Stone',
-		Body = { Name = 'Telchine Chas.', Augment = '"Regen" potency+3' },
-		Hands = { Name = 'Taeon Gloves', Augment = '"Regen" potency+3' },
-		Legs = { Name = 'Telchine Braconi', Augment = '"Regen" potency+3' },
-		
+        Main = 'Bolelabunga',
+        Sub = 'Ammurapi Shield',
+        Body = 'Viti. Tabard +3',
     },
     Cursna = {
-		Ammo = 'Clarus Stone',
-		Ear1 = 'Eabani Earring',
-	    Neck = 'Sanctity Necklace',
-		Head = 'Viti. Chapeau +4',
-		Body = 'Viti. Tabard +3',
-		Hands = 'Nyame Gauntlets',
-	    Ring1 = 'Stikini Ring +1',
-		Ring2 = 'Menelaus\'s Ring',
-		Legs = 'Carmine Cuisses +1',
-		Feet = 'Nyame Sollerets',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
+        Ring1 = 'Purity Ring',
 		Waist = 'Gishdubar Sash',
-		Ear2 = 'Meili Earring',
-		
     },
 
     Enhancing = {
-		Ammo = 'Clarus Stone',
-		Ear1 = 'Eabani Earring',
-		Head = 'Lethargy Chappel +1',
-		Neck = 'Dls. Torque +2',
-		Body = 'Lethargy Sayon +3',
-		Hands = 'Atrophy Gloves +3',
+        Main = 'Sakpata\'s Sword',
+        Sub = 'Ammurapi Shield',
+        Ammo = 'Pemphredo Tathlum',
+        Head = 'Befouled Crown',
+        Neck = 'Dls. Torque +1',
+        Ear1 = 'Mendi. Earring',
+        Ear2 = 'Lethargy Earring',
+        Body = 'Viti. Tabard +3',
+        Hands = 'Atrophy Gloves +2',
         Ring1 = 'Stikini Ring +1',
-        Ring2 = 'Mephitas\'s Ring +1',
-		Ear2 = 'Leth. Earring +1',
-		Waist = 'Embla Sash',
-		Legs = 'Leth. Fuseau +3',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Feet = 'Leth. Houseaux +3',
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Accuracy+20', [2] = 'Attack+20', [3] = 'DEX+20' } },
+        Waist = 'Embla Sash',
+        Legs = 'Telchine Braconi',
+        Feet = 'Leth. Houseaux +1',
     },
-    Self_Enhancing = {
-		Ammo = 'Clarus Stone',
-		Head = 'Viti. Chapeau +4',
-		Neck = 'Dls. Torque +2',
-		Body = 'Viti. Tabard +3',
-		Hands = 'Atrophy Gloves +3',
-        Ring1 = 'Stikini Ring +1',
-        Ring2 = 'Mephitas\'s Ring +1',
-		Ear2 = 'Leth. Earring +1',
-		Waist = 'Embla Sash',
-		Legs = 'Atrophy Tights +3',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Feet = 'Leth. Houseaux +3',
-	
-	},
-	Gain = {
-		Ammo = 'Clarus Stone',
-		Hands = 'Viti. Gloves +3',
-		
-	},
-    Skill_Enhancing = {
-		Ammo = 'Clarus Stone',
-		Neck = 'Melic Torque',
-		Ear1 = 'Mimir Earring',
-		Hands = 'Viti. Gloves +3',
-		Ring1 = 'Stikini Ring +1',
-        Ring2 = 'Stikini Ring +1',
-		Waist = 'Olympus Sash',
-		Back = 'Ghostfyre Cape',
-
-	},
+    Self_Enhancing = {},
+    Skill_Enhancing = {},
     Stoneskin = {
-		Ammo = 'Clarus Stone',
-		Ring1 = 'Defending Ring',
-		Waist = 'Siegel Sash',
+        Neck = 'Nodens Gorget',
+        Waist = 'Siegel Sash',
     },
-	
-	
-    Phalanx = {
-		Ammo = 'Clarus Stone',
-		Hands = 'Atrophy Gloves +3' --capped, don't need +skill from relic
-	},
-	
-	Self_Phalanx = {
-		Ammo = 'Clarus Stone',
-		Head = { Name = 'Taeon Chapeau', Augment = 'Phalanx +3' },
-		Body = { Name = 'Taeon Tabard', Augment = 'Phalanx +3' },
-		Hands = { Name = 'Taeon Gloves', Augment = 'Phalanx +3' },
-		Legs = { Name = 'Taeon Tights', Augment = 'Phalanx +3' },
-		Feet = { Name = 'Taeon Boots', Augment = 'Phalanx +3' },
-	},
-	
+    Phalanx = {},
     Refresh = {
-		Ammo = 'Clarus Stone',
-		Head = 'Amalric Coif +1',
-		Body = 'Atrophy Tabard +4',
-		Legs = 'Leth. Fuseau +3',
-		
-    },
-	
-    Self_Refresh = {
-		Ammo = 'Clarus Stone',
-		Head = 'Amalric Coif +1',
-		Body = 'Atrophy Tabard +4',
+        Body = 'Atrophy Tabard +2',
 		Waist = 'Gishdubar Sash',
-		Legs = 'Leth. Fuseau +3',
-		
-	},
-
+    },
+    Self_Refresh = {},
 
     Enfeebling = {
-        Head = 'Viti. Chapeau +4',
-        Neck = 'Dls. Torque +2',
+        Main = 'Bunzi\'s Rod',
+        Sub = 'Ammurapi Shield',
+        Range = 'Ullr',
+        Head = 'Viti. Chapeau +2',
+        Neck = 'Dls. Torque +1',
         Ear1 = 'Snotra Earring',
-		Ear2 = 'Vor Earring',
-        Body = 'Atrophy Tabard +4',
-        Hands = 'Leth. Ganth. +3',
+        Ear2 = 'Malignance Earring',
+        Body = 'Lethargy Sayon +1',
+        Hands = 'Malignance Gloves',
+        Ring1 = 'Kishar Ring',
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = { Name = 'Aurist\'s Cape +1', AugPath='A' },
+        Waist = { Name = 'Acuity Belt +1', AugPath='A' },
+        Legs = 'Nyame Flanchard',
+        Feet = { Name = 'Medium\'s Sabots', Augment = { [1] = 'MND+6', [2] = '"Conserve MP"+5', [3] = 'MP+40', [4] = '"Cure" potency +3%' } },
+    },
+    EnfeeblingACC = {
+        Ear1 = 'Snotra Earring',
+        Ear2 = 'Regal Earring',
+        Body = 'Atrophy Tabard +2',
+        Hands = 'Atrophy Gloves +2',
         Ring1 = 'Stikini Ring +1',
-        Ring2 = 'Kishar Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Waist = 'Acuity Belt +1',
-		Legs = { Name = 'Chironic Hose', Augment = { [1] = '"Resist Silence"+7', [2] = '"Mag. Atk. Bns."+3', [3] = 'MND+14', [4] = 'Mag. Acc.+30' } },
-        Feet = 'Viti. Boots +4',
-		
     },
-    EnfeeblingACC = { --used when MACC toggle is on
+    Mind_Enfeebling = {
+        Ring1 = 'Stikini Ring +1',
     },
-    Mind_Enfeebling = { --Paralyze, slow, addle
-	
-    },
-    Int_Enfeebling = { --Poison
-		Neck = 'Sibyl Scarf',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = '"Mag. Atk. Bns."+10', [2] = 'Magic Damage+20', [3] = 'INT+30', [4] = 'Mag. Acc.+20' } },
-		Waist = 'Acuity Belt +1',
-	
-	},
-    Potency_Enfeebling = { --Distract 1-3, Frazzle 3
-		Body = 'Lethargy Sayon +3',
-		Ring2 = 'Metamor. Ring +1',
-		
-	},
-	
+    Int_Enfeebling = {},
+    Potency_Enfeebling = {},
 
     Drain = {
-        Head = 'Leth. Chappel +2',
+        Main = 'Bunzi\'s Rod',
+        Sub = 'Ammurapi Shield',
+        Range = 'Ullr',
+        Head = 'Viti. Chapeau +2',
         Neck = 'Erra Pendant',
-        Ear1 = 'Eabani Earring',
-        Ear2 = 'Friomisi Earring',
-        Body = 'Bunzi\'s Robe',
-        Ring1 = 'Stikini Ring +1',
-        Ring2 = 'Jhakri Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = '"Mag. Atk. Bns."+10', [2] = 'Magic Damage+20', [3] = 'INT+30', [4] = 'Mag. Acc.+20' } },
-        Waist = 'Acuity Belt +1',
-        Legs = 'Leth. Fuseau +3',
-        Feet = 'Leth. Houseaux +3',
-		
+        Ear1 = 'Regal Earring',
+        Ear2 = 'Malignance Earring',
+        Body = 'Atrophy Tabard +2',
+        Hands = 'Atrophy Gloves +2',
+        Ring1 = 'Kishar Ring',
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = { Name = 'Aurist\'s Cape +1', AugPath='A' },
+        Waist = 'Fucho-no-Obi',
+        Legs = 'Nyame Flanchard',
+        Feet = 'Amalric Nails +1',
     },
 
     Nuke = {
-		Ammo = 'Ghastly Tathlum +1',
-        Head = 'Ea Hat +1',
-        Neck = 'Sibyl Scarf',
-        Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring',
-        Body = 'Lethargy Sayon +3',
-        Hands = 'Leth. Ganth. +3',
-        Ring1 = 'Jhakri Ring',
-		Ring2 = 'Metamor. Ring +1',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = '"Mag. Atk. Bns."+10', [2] = 'Magic Damage+20', [3] = 'INT+30', [4] = 'Mag. Acc.+20' } },
-        Waist = 'Acuity Belt +1',
-        Legs = 'Leth. Fuseau +3',
-        Feet = 'Leth. Houseaux +3',
+        Main = 'Marin Staff +1',
+        Sub = 'Enki Strap',
+        Ammo = 'Pemphredo Tathlum',
+        Head = 'Jhakri Coronal +2',
+        Neck = 'Baetyl Pendant',
+        Ear1 = 'Regal Earring',
+        Ear2 = 'Malignance Earring',
+        Body = 'Nyame Mail',
+        Hands = 'Amalric Gages +1',
+        Ring1 = 'Shiva Ring +1',
+        Ring2 = { Name = 'Metamor. Ring +1', AugPath='A' },
+        Back = 'Aurist\'s Cape +1',
+        Waist = { Name = 'Acuity Belt +1', AugPath='A' },
+        Legs = 'Amalric Slops +1',
+        Feet = 'Amalric Nails +1',
     },
-
-    CureNuke = {
-		Ammo = 'Ghastly Tathlum +1',
-        Head = 'Leth. Chappel +2',
-        Neck = 'Dls. Torque +2',
-        Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring',
-        Body = 'Lethargy Sayon +3',
-        Hands = 'Leth. Ganth. +3',
-        Ring1 = 'Stikini Ring +1',
-		Ring2 = 'Metamor. Ring +1',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-        Waist = 'Hachirin-no-Obi',
-        Legs = 'Leth. Fuseau +3',
-        Feet = 'Leth. Houseaux +3',
-    },
-
     NukeACC = {};
-    Burst = { --38 MB I without Bunzi's Rod, 48 with, (40 cap). Currently 20 MB II
-		Ammo = 'Ghastly Tathlum +1',
-        Head = 'Ea Hat +1', --7, 7 II
-        Neck = 'Sibyl Scarf',
-        Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring', 
-        Body = 'Ea Houppelande', --8, 8 II
-        Hands = 'Bunzi\'s Gloves', --8
-        Ring1 = 'Mujin Band', --5 II
-		Ring2 = 'Metamor. Ring +1',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = '"Mag. Atk. Bns."+10', [2] = 'Magic Damage+20', [3] = 'INT+30', [4] = 'Mag. Acc.+20' } },
-        Waist = 'Acuity Belt +1',
-        Legs = 'Leth. Fuseau +3', --15
-        Feet = 'Leth. Houseaux +3',
-		
+    Burst = {
+        Main = 'Bunzi\'s Rod', -- 10 and 0
+        Sub = 'Ammurapi Shield',
+        Head = 'Ea Hat', -- 6 and 6
+        Body = 'Ea Houppelande', -- 8 and 8
+        Hands = 'Amalric Gages +1', -- 0 and 6
+        Ring1 = 'Mujin Band', -- 0 and 5
+        Feet = 'Ea Pigaches', -- 4 and 4
     },
-    Helix = {
-	
-	},
-    Mp_Body = {
-	
-	},
+    Helix = {},
+    Mp_Body = {Body = 'Seidr Cotehardie',},
 
     Preshot = {
-	
     },
     Midshot = {
-
+        Ear1 = 'Telos Earring',
+        Ear2 = 'Crep. Earring',
     },
 
     Ws_Default = {
-		Ammo = 'Oshasha\'s Treatise',
-		Head = 'Viti. Chapeau +4',
-        Neck = 'Rep. Plat. Medal',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
-        Body = 'Viti. Tabard +3',
-        Hands = 'Atrophy Gloves +3',
-        Ring1 = 'Cornelia\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-        Waist = 'Sailfi Belt +1',
-        Legs = 'Viti. Tights +3',
-        Feet = 'Leth. Houseaux +3',
-		
-    },
-	
-    Ws_Hybrid = {
-	
-    },
-	
-    Ws_Acc = {
-	
-    },
-	Seraph_Default = {
-		Ammo = 'Sroda Tathlum',
-		Head = 'Viti. Chapeau +4',
-		Neck = 'Sibyl Scarf',
-		Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring',
-		Body = 'Lethargy Sayon +3',
-		Hands = 'Jhakri Cuffs +2',
-		Ring1 = 'Cornelia\'s Ring',
-		Ring2 = 'Metamor. Ring +1',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Waist = 'Acuity Belt +1',
-		Legs = 'Leth. Fuseau +3',
-		Feet = 'Leth. Houseaux +3',
-	
-	},
-	RedLotus_Default = {
-		Ammo = 'Sroda Tathlum',
-		Head = 'Viti. Chapeau +4',
-		Neck = 'Sibyl Scarf',
-		Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring',
-		Body = 'Lethargy Sayon +3',
-		Hands = 'Jhakri Cuffs +2',
-		Ring1 = 'Cornelia\'s Ring',
-		Ring2 = 'Jhakri Ring',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-		Waist = 'Acuity Belt +1',
-		Legs = 'Leth. Fuseau +3',
-		Feet = 'Leth. Houseaux +3',
-	
-	},
-	Sanguine_Default = {
-		Ammo = 'Sroda Tathlum',
-		Head = 'Pixie Hairpin +1',
-		Neck = 'Sibyl Scarf',
-		Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring',
-		Body = 'Lethargy Sayon +3',
-		Hands = 'Jhakri Cuffs +2',
-		Ring1 = 'Cornelia\'s Ring',
-		Ring2 = 'Archon Ring',
-		Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Waist = 'Acuity Belt +1',
-		Legs = 'Leth. Fuseau +3',
-		Feet = 'Leth. Houseaux +3',
-		
-	},
-	
-    Savage_Default = {
-		Ammo = 'Oshasha\'s Treatise',
-		Head = 'Viti. Chapeau +4',
-        Neck = 'Rep. Plat. Medal',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
-        Body = 'Nyame Mail',
-        Hands = 'Atrophy Gloves +3',
-        Ring1 = 'Cornelia\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-        Waist = 'Sailfi Belt +1',
-        Legs = 'Nyame Flanchard',
-        Feet = 'Leth. Houseaux +3',
-
-    },
-	
-    Savage_Hybrid = {
-		Ammo = 'Crepuscular Pebble',
-		Head = 'Nyame Helm',
-        Neck = 'Rep. Plat. Medal',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
+        Ammo = 'Voluspa Tathlum',
+        Head = 'Viti. Chapeau +2',
+        Neck = 'Fotia Gorget',
+        Ear1 = 'Eabani Earring',
+        Ear2 = 'Etiolation Earring',
         Body = 'Nyame Mail',
         Hands = 'Nyame Gauntlets',
-        Ring1 = 'Cornelia\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-        Waist = 'Sailfi Belt +1',
-        Legs = 'Nyame Flanchard',
-        Feet = 'Nyame Sollerets',
-
-	},
-	
-    Savage_Acc = {
-
-	},
-
-    Chant_Default = {
-		Ammo = 'Oshasha\'s Treatise',
-	    Head = 'Viti. Chapeau +4',
-        Neck = 'Fotia Gorget',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
-        Body = 'Nyame Mail',
-        Hands = 'Bunzi\'s Gloves',
-        Ring1 = 'Epona\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
+        Ring1 = 'Ilabrat Ring',
+        Ring2 = 'Karieyh Ring +1',
+        Back = 'Solemnity Cape',
         Waist = 'Fotia Belt',
         Legs = 'Nyame Flanchard',
-        Feet = 'Nyame Sollerets',
+        Feet = 'Thereoid Greaves',
     },
-	
-    Chant_Hybrid = {
-		Ammo = 'Crepuscular Pebble',
-		Head = 'Nyame Helm',
-        Neck = 'Rep. Plat. Medal',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
-        Body = 'Nyame Mail',
-        Hands = 'Bunzi\'s Gloves',
-        Ring1 = 'Cornelia\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-        Waist = 'Sailfi Belt +1',
-        Legs = 'Nyame Flanchard',
-        Feet = 'Leth. Houseaux +3',
-	},
-	
-    Chant_Acc = {
-	
-	},
-	
-	BlackHalo_Default = {
-		Ammo = 'Oshasha\'s Treatise',
-		Head = 'Viti. Chapeau +4',
-        Neck = 'Rep. Plat. Medal',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
-        Body = 'Nyame Mail',
-        Hands = 'Atrophy Gloves +3',
-        Ring1 = 'Cornelia\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-        Waist = 'Sailfi Belt +1',
-        Legs = 'Nyame Flanchard',
-        Feet = 'Leth. Houseaux +3',
+    Ws_Hybrid = {
     },
-	
-    BlackHalo_Hybrid = {
-		Ammo = 'Crepuscular Pebble',
-		Head = 'Nyame Helm',
-        Neck = 'Rep. Plat. Medal',
-        Ear1 = 'Brutal Earring',
-        Ear2 = 'Sherida Earring',
+    Ws_Acc = {
+    },
+
+    Savage_Default = {
+        Ammo = 'Voluspa Tathlum',
+        Head = 'Viti. Chapeau +2',
+        Neck = 'Fotia Gorget',
+        Ear1 = 'Telos Earring',
+        Ear2 = 'Digni. Earring',
+        Body = 'Nyame Mail',
+        Hands = 'Atrophy Gloves +2',
+        Ring1 = 'Petrov Ring',
+        Ring2 = 'Karieyh Ring +1',
+        Back = 'Solemnity Cape',
+        Waist = { Name = 'Sailfi Belt +1', AugPath='A' },
+        Legs = 'Nyame Flanchard',
+        Feet = 'Thereoid Greaves',
+    },
+    Savage_Hybrid = {},
+    Savage_Acc = {},
+
+    Chant_Default = {
+        Ammo = 'Voluspa Tathlum',
+        Head = { Name = 'Blistering Sallet +1', AugPath='A' },
+        Neck = 'Fotia Gorget',
+        Ear1 = 'Eabani Earring',
+        Ear2 = 'Etiolation Earring',
         Body = 'Nyame Mail',
         Hands = 'Nyame Gauntlets',
-        Ring1 = 'Cornelia\'s Ring',
-        Ring2 = 'Rajas Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'STR+20', [2] = 'Weapon skill damage +10%', [3] = 'Attack+20', [4] = 'Accuracy+20' } },
-        Waist = 'Sailfi Belt +1',
+        Ring1 = 'Petrov Ring',
+        Ring2 = 'Begrudging Ring',
+        Back = 'Solemnity Cape',
+        Waist = 'Fotia Belt',
         Legs = 'Nyame Flanchard',
-        Feet = 'Leth. Houseaux +3',
-	},
-	
-    BlackHalo_Acc = {
-	
-	},
-
-    AeolianEdge_Default = {
-		Ammo = 'Oshasha\'s Treatise',
-		Head = 'Viti. Chapeau +4',
-		Neck = 'Sibyl Scarf',
-		Ear1 = 'Hecate\'s Earring',
-        Ear2 = 'Friomisi Earring',
-		Body = 'Lethargy Sayon +3',
-		Hands = 'Jhakri Cuffs +2',
-		Ring1 = 'Cornelia\'s Ring',
-		Ring2 = 'Jhakri Ring',
-        Back = { Name = 'Sucellos\'s Cape', Augment = { [1] = 'Weapon skill damage +10%', [2] = 'Magic Damage+20', [3] = 'MND+30', [4] = 'Mag. Acc.+20' } },
-		Waist = 'Acuity Belt +1',
-		Legs = 'Leth. Fuseau +3',
-		Feet = 'Leth. Houseaux +3',
+        Feet = 'Thereoid Greaves',
     },
-
-    AeolianEdge_Hybrid = {
-
-    },
-
-    AeolianEdge_Acc = {
-
-    },
+    Chant_Hybrid = {},
+    Chant_Acc = {},
 
     CS = {
 		Body = 'Viti. Tabard +3',
-		
 	},
     TH = {
-		Ammo = 'Per. Lucky Egg',
-		Head = 'Wh. Rarab Cap +1',
-		Hands = 'Volte Bracers',
-		Feet = 'Volte Boots',
+        Ammo = 'Per. Lucky Egg',
+		Waist = 'Chaac Belt',
 	},
     Movement = {
-		Ring1 = 'Defending Ring',
-        Ring2 = 'Shneddick Ring',
+        Legs = 'Carmine Cuisses +1',
 	},
-    Naegling = {
-        Main = 'Naegling',
-    },
-    Crocea = {
-        Main = 'Crocea Mors',
-    },
-    Maxentius = {
-        Main = 'Maxentius',
-    },
-    Tauret = {
-        Main = 'Tauret',
-    },
-    TPBonusOH = {
-        Sub = 'Thibron',
-    },
-    Bunzi = {
-        Sub = 'Bunzi\'s Rod',
-    },
-    Degen = {
-        Sub = 'Demers. Degen +1',
-    },
-    Ullr = {
-        Range = 'Ullr',
-        Ammo = 'Horn Arrow',
-    },
-    WakeUp = {
-        Main = 'Caliburnus',
-    }
-
-
 };
 profile.Sets = sets;
 
@@ -623,9 +337,6 @@ profile.Packer = {
 profile.OnLoad = function()
 	gSettings.AllowAddSet = true;
     gcinclude.Initialize();
-	
-		--Lockstyle
-    AshitaCore:GetChatManager():QueueCommand(1, '/lac Lockstyle Lockstyle');
 
     AshitaCore:GetChatManager():QueueCommand(1, '/macro book 1');
     AshitaCore:GetChatManager():QueueCommand(1, '/macro set 10');
@@ -639,119 +350,21 @@ profile.HandleCommand = function(args)
     gcinclude.HandleCommands(args);
 end
 
-profile.Hachirin = function(element)
-    local buff = {
-        Fire    = { single = gData.GetBuffCount(178), double = gData.GetBuffCount(589) },
-        Ice     = { single = gData.GetBuffCount(179), double = gData.GetBuffCount(590) },
-        Wind    = { single = gData.GetBuffCount(180), double = gData.GetBuffCount(591) },
-        Earth   = { single = gData.GetBuffCount(181), double = gData.GetBuffCount(592) },
-        Thunder = { single = gData.GetBuffCount(182), double = gData.GetBuffCount(593) },
-        Water   = { single = gData.GetBuffCount(183), double = gData.GetBuffCount(594) },
-        Light   = { single = gData.GetBuffCount(184), double = gData.GetBuffCount(595) },
-        Dark    = { single = gData.GetBuffCount(185), double = gData.GetBuffCount(596) },
-    }
-
-
-    local weakness = {
-        Fire    = 'Water',
-        Ice     = 'Fire',
-        Wind    = 'Ice',
-        Earth   = 'Wind',
-        Thunder = 'Earth',
-        Water   = 'Thunder',
-        Light   = 'Dark',
-        Dark    = 'Light',
-    }
-
-    local weather = gData.GetEnvironment()
-    local b = buff[element]
-    local weak = weakness[element]
-
-    if not b then 
-        return 
-    end
-
-    -- Check for double weather or storm
-    if (weather.WeatherElement == element .. ' x2' or b.double == 1)
-    -- Check for single weather or storm, and weak day isn't active
-    or ((weather.WeatherElement == element or b.single == 1) and weather.DayElement ~= weak and (buff[weak].single ~= 1 and buff[weak].double ~= 1))
-    -- Check for matching day, and opposing weather isn't active
-    or (weather.DayElement == element and weather.WeatherElement ~= weak and weather.WeatherElement ~= weak .. ' x2') then
-        gFunc.Equip('Waist', 'Hachirin-no-Obi');
-    end
-end
-
 profile.HandleDefault = function()
-    local asleep = math.min(gData.GetBuffCount(2) + gData.GetBuffCount(193) + gData.GetBuffCount(19), 1);
-    local player = gData.GetPlayer();
-
     gFunc.EquipSet(sets.Idle);
 	
+	local player = gData.GetPlayer();
     if (player.Status == 'Engaged') then
         gFunc.EquipSet(sets.Tp_Default)
         if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
-            gFunc.EquipSet('Tp_' .. gcdisplay.GetCycle('MeleeSet')) end
-        if gcdisplay.GetToggle('AutoDW') then
-            local dwSet, totalDW = JHaste.GetDWGearSet(dwGearPool)
-            if dwSet then
-                if next(dwSet) == nil then
-        -- Optionally unequip all slots that might have had DW gear.
-                    gFunc.Equip('Ear1', nil)
-                    gFunc.Equip('Ear2', nil)
-                    gFunc.Equip('Back', nil)
-                    gFunc.Equip('Waist', nil)
-                    -- etc...
-                end
-                for slot, item in pairs(dwSet) do
-                    gFunc.Equip(slot, item)
-                end
-            end
-        end
-        -- Optional debug message
-        -- print(chat.header('GCinclude'):append(chat.message('DW Needed: ' .. JHaste.dwNeeded .. ', Equipped DW: ' .. totalDW)))
-        if (gcdisplay.GetToggle('TH') == true) then 
-            gFunc.EquipSet(sets.TH) 
-        end
+			gFunc.EquipSet('Tp_' .. gcdisplay.GetCycle('MeleeSet')) end
+		if (gcdisplay.GetToggle('TH') == true) then gFunc.EquipSet(sets.TH) end
+        if (gcdisplay.GetToggle('Fight') == false) then
+            AshitaCore:GetChatManager():QueueCommand(1, '/fight') end
     elseif (player.Status == 'Resting') then
         gFunc.EquipSet(sets.Resting);
     elseif (player.IsMoving == true) then
-		gFunc.EquipSet(sets.Movement)
-    end
-
-    --main wep
-    local mainHandSets = {
-    ['Naegling']  = sets.Naegling,
-    ['Crocea']    = sets.Crocea,
-    ['Maxentius'] = sets.Maxentius,
-    ['Tauret']    = sets.Tauret,
-    }
-
-    -- Off Hand weapon sets
-    local offHandSets = {
-    ['TP Bonus'] = sets.TPBonusOH,
-    ['Degen']    = sets.Degen,
-    ['Bunzi']    = sets.Bunzi,
-    }
-
-    -- Equip main hand set if it exists
-    local mhSet = mainHandSets[gcdisplay.GetCycle('MH')]
-    if mhSet then gFunc.EquipSet(mhSet) end
-
-    -- Equip off hand set if it exists
-    local ohSet = offHandSets[gcdisplay.GetCycle('OH')]
-    if ohSet then gFunc.EquipSet(ohSet) end
-
-    if asleep > 0 then
-        print(chat.header('GCinclude'):append(chat.message('Type /zz to wake up.')))
-        if gcinclude.settings.wakeUp == true then
-            gFunc.EquipSet(sets.WakeUp)
-            if gData.GetBuffCount(37) > 0 then
-                AshitaCore:GetChatManager():QueueCommand(1, '/cancel 37');
-            end
-        end
-    end
-    if gcinclude.settings.wakeUp == true and asleep == 0 then
-        gcinclude.settings.wakeUp = false;
+		gFunc.EquipSet(sets.Movement);
     end
 	
     gcinclude.CheckDefault ();
@@ -793,135 +406,79 @@ profile.HandlePrecast = function()
 end
 
 profile.HandleMidcast = function()
-    local spell = gData.GetAction()
-    local target = gData.GetActionTarget()
-    local me = AshitaCore:GetMemoryManager():GetParty():GetMemberName(0)
-    local player = gData.GetPlayer()
+    local weather = gData.GetEnvironment();
+    local spell = gData.GetAction();
+    local target = gData.GetActionTarget();
+    local me = AshitaCore:GetMemoryManager():GetParty():GetMemberName(0);
+    local player = gData.GetPlayer();
 
-    local skill = spell.Skill
-    local spellName = spell.Name
-    local targetIsSelf = target.Name == me
+    if (spell.Skill == 'Enhancing Magic') then
+        gFunc.EquipSet(sets.Enhancing);
+        if (target.Name == me) then
+            gFunc.EquipSet(sets.Self_Enhancing);
+        end
 
-    ------------------------------------------------------------
-    -- Enhancing Magic
-    ------------------------------------------------------------
-    if skill == 'Enhancing Magic' then
-        gFunc.EquipSet(sets.Enhancing)
-        if targetIsSelf then gFunc.EquipSet(sets.Self_Enhancing) end
-
-        local enhancingCases = {
-            Phalanx = function()
-                gFunc.EquipSet(sets.Phalanx)
-                if targetIsSelf then gFunc.EquipSet(sets.Self_Phalanx) end
-            end,
-            Stoneskin = function() gFunc.EquipSet(sets.Stoneskin) end,
-            Temper = function() gFunc.EquipSet(sets.Skill_Enhancing) end,
-            Regen = function() gFunc.EquipSet(sets.Regen) end,
-            Refresh = function()
-                gFunc.EquipSet(sets.Refresh)
-                if targetIsSelf then gFunc.EquipSet(sets.Self_Refresh) end
-            end,
-            En = function()
-                if targetIsSelf then gFunc.EquipSet(sets.Skill_Enhancing) end
-            end,
-            Gain = function()
-                if targetIsSelf then gFunc.EquipSet(sets.Gain) end
-            end,
-        }
-
-        for key, handler in pairs(enhancingCases) do
-            if spellName:contains(key) then
-                handler()
-                break
+        if string.match(spell.Name, 'Phalanx') then
+            gFunc.EquipSet(sets.Phalanx);
+        elseif string.match(spell.Name, 'Stoneskin') then
+            gFunc.EquipSet(sets.Stoneskin);
+        elseif string.contains(spell.Name, 'Temper') then
+            gFunc.EquipSet(sets.Skill_Enhancing);
+        elseif string.contains(spell.Name, 'Regen') then
+            gFunc.EquipSet(sets.Regen);
+        elseif string.contains(spell.Name, 'Refresh') then
+            gFunc.EquipSet(sets.Refresh);
+            if (target.Name == me) then
+                gFunc.EquipSet(sets.Self_Refresh);
             end
+        elseif (target.Name == me) and string.contains(spell.Name, 'En') then
+            gFunc.EquipSet(sets.Skill_Enhancing);
         end
-
-    ------------------------------------------------------------
-    -- Healing Magic
-    ------------------------------------------------------------
-    elseif skill == 'Healing Magic' then
-        if spellName:contains('Cure') or spellName:contains('Curaga') then
-            gFunc.EquipSet(sets.Cure)
-            if targetIsSelf then gFunc.EquipSet(sets.Self_Cure) end
-            profile.Hachirin(spell.Element)
+    elseif (spell.Skill == 'Healing Magic') then
+        gFunc.EquipSet(sets.Cure);
+        if (target.Name == me) then
+            gFunc.EquipSet(sets.Self_Cure);
         end
-
-        if target.Name == 'Skomora' or target.Name == 'Triboulex' then
-            if spellName:match('Cure') then
-                gFunc.EquipSet(sets.CureNuke)
-                profile.Hachirin(spell.Element)
-            end
+        if string.match(spell.Name, 'Cursna') then
+            gFunc.EquipSet(sets.Cursna);
         end
+    elseif (spell.Skill == 'Elemental Magic') then
+        gFunc.EquipSet(sets.Nuke);
 
-        if spellName:match('Cursna') then
-            gFunc.EquipSet(sets.Cursna)
+        if (gcdisplay.GetToggle('NukeSet') == 'Macc') then
+            gFunc.EquipSet(sets.NukeACC);
         end
-
-    ------------------------------------------------------------
-    -- Elemental Magic
-    ------------------------------------------------------------
-    elseif skill == 'Elemental Magic' then
-        gFunc.EquipSet(sets.Nuke)
-
-        if gcdisplay.GetToggle('NukeSet') == 'Macc' then
-            gFunc.EquipSet(sets.NukeACC)
+        if (gcdisplay.GetToggle('Burst') == true) then
+            gFunc.EquipSet(sets.Burst);
         end
-        if gcdisplay.GetToggle('Burst') then
-            gFunc.EquipSet(sets.Burst)
+        if (spell.Element == weather.WeatherElement) or (spell.Element == weather.DayElement) then
+            gFunc.Equip('Waist', 'Hachirin-no-Obi');
         end
-        if spellName:match('helix') then
-            gFunc.EquipSet(sets.Helix)
+        if string.match(spell.Name, 'helix') then
+            gFunc.EquipSet(sets.Helix);
         end
-        if player.MPP <= 40 then
-            gFunc.EquipSet(sets.Mp_Body)
+        if (player.MPP <= 40) then
+            gFunc.EquipSet(sets.Mp_Body);
         end
-
-        profile.Hachirin(spell.Element)
-
-    ------------------------------------------------------------
-    -- Enfeebling Magic
-    ------------------------------------------------------------
-    elseif skill == 'Enfeebling Magic' then
-        gFunc.EquipSet(sets.Enfeebling)
-        if gcdisplay.GetToggle('NukeSet') == 'Macc' then
-            gFunc.EquipSet(sets.EnfeeblingACC)
+    elseif (spell.Skill == 'Enfeebling Magic') then
+        gFunc.EquipSet(sets.Enfeebling);
+        if (gcdisplay.GetToggle('NukeSet') == 'Macc') then
+            gFunc.EquipSet(sets.EnfeeblingACC);
         end
-
-        local enfeeblingCases = {
-            Paralyze = sets.Mind_Enfeebling,
-            Slow = sets.Mind_Enfeebling,
-            Addle = sets.Mind_Enfeebling,
-            Poison = sets.Int_Enfeebling,
-            Distract = sets.Potency_Enfeebling,
-            ['Frazzle III'] = sets.Potency_Enfeebling,
-        }
-
-        for key, set in pairs(enfeeblingCases) do
-            if spellName:contains(key) then
-                gFunc.EquipSet(set)
-                break
-            end
+        if string.contains(spell.Name, 'Paralyze') or string.contains(spell.Name, 'Slow') or string.contains(spell.Name, 'Addle') then
+            gFunc.EquipSet(sets.Mind_Enfeebling);
+        elseif string.contains(spell.Name, 'Poison') then
+            gFunc.EquipSet(sets.Int_Enfeebling);
+        elseif string.contains(spell.Name, 'Distract') or string.match(spell.Name, 'Frazzle III') then
+            gFunc.EquipSet(sets.Potency_Enfeebling);
         end
-
-        profile.Hachirin(spell.Element)
-
-    ------------------------------------------------------------
-    -- Dark Magic
-    ------------------------------------------------------------
-    elseif skill == 'Dark Magic' then
-        gFunc.EquipSet(sets.EnfeeblingACC) -- Base MACC
-        if spellName:contains('Aspir') or spellName:contains('Drain') then
-            gFunc.EquipSet(sets.Drain)
+    elseif (spell.Skill == 'Dark Magic') then
+        gFunc.EquipSet(sets.EnfeeblingACC); -- mostly MACC anyways
+        if (string.contains(spell.Name, 'Aspir') or string.contains(spell.Name, 'Drain')) then
+            gFunc.EquipSet(sets.Drain);
         end
-        profile.Hachirin(spell.Element)
     end
-
-    ------------------------------------------------------------
-    -- TH Toggle
-    ------------------------------------------------------------
-    if gcdisplay.GetToggle('TH') then
-        gFunc.EquipSet(sets.TH)
-    end
+	if (gcdisplay.GetToggle('TH') == true) then gFunc.EquipSet(sets.TH) end
 end
 
 profile.HandlePreshot = function()
@@ -935,57 +492,22 @@ end
 
 profile.HandleWeaponskill = function()
     local canWS = gcinclude.CheckWsBailout();
-    if not canWS then
-        gFunc.CancelAction()
-        return
-    end
-
-    local ws = gData.GetAction();
-    local wsName = ws.Name
-    local meleeSet = gcdisplay.GetCycle('MeleeSet')
-    local defaultSet = sets.Ws_Default
-
-    -- Base WS set
-    gFunc.EquipSet(defaultSet)
-    if meleeSet ~= 'Default' then
-        gFunc.EquipSet('Ws_' .. meleeSet)
-    end
-
-    -- Table mapping WS names or patterns to set keys and Hachirin elements
-    local wsTable = {
-        ['Chant du Cygne']  = { set = 'Chant', element = nil },
-        ['Savage Blade']    = { set = 'Savage', element = nil },
-        ['Black Halo']      = { set = 'BlackHalo', element = nil },
-        ['Sanguine Blade']  = { set = 'Sanguine', element = 'Dark' },
-        ['Seraph Blade']    = { set = 'Seraph', element = 'Light' },
-        ['Shining Blade']   = { set = 'Seraph', element = 'Light' },
-        ['Red Lotus Blade'] = { set = 'RedLotus', element = 'Fire' },
-        ['Burning Blade']   = { set = 'RedLotus', element = 'Fire' },
-        ['Aeolian Edge']    = { set = 'AeolianEdge', element = 'Wind' },
-    }
-
-    for pattern, data in pairs(wsTable) do
-        if wsName:find(pattern) then
-            -- Equip default WS set
-            local setName = data.set .. '_Default'
-            if sets[setName] then
-                gFunc.EquipSet(sets[setName])
-            end
-
-            -- Equip melee variation if applicable
-            if meleeSet ~= 'Default' then
-                local meleeSetName = data.set .. '_' .. meleeSet
-                if sets[meleeSetName] then
-                    gFunc.EquipSet(sets[meleeSetName])
-                end
-            end
-
-            -- Equip Hachirin if element is present
-            if data.element then
-                profile.Hachirin(data.element)
-            end
-
-            break -- exit loop after first match
+    if (canWS == false) then gFunc.CancelAction() return;
+    else
+        local ws = gData.GetAction();
+    
+        gFunc.EquipSet(sets.Ws_Default)
+        if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
+        gFunc.EquipSet('Ws_' .. gcdisplay.GetCycle('MeleeSet')) end
+   
+        if string.match(ws.Name, 'Chant du Cygne') then
+            gFunc.EquipSet(sets.Chant_Default)
+            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
+            gFunc.EquipSet('Chant_' .. gcdisplay.GetCycle('MeleeSet')); end
+	    elseif string.match(ws.Name, 'Savage Blade') then
+            gFunc.EquipSet(sets.Savage_Default)
+            if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
+            gFunc.EquipSet('Savage_' .. gcdisplay.GetCycle('MeleeSet')); end
         end
     end
 end

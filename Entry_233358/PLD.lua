@@ -1,5 +1,6 @@
 local profile = {};
-gcinclude = gFunc.LoadFile('common\\gcinclude.lua');
+local gcinclude = require('common/gcinclude');
+local JHaste = require('common/J-Haste')
 
 local sets = {
     Idle = {
@@ -129,7 +130,7 @@ local sets = {
     Precast = {--44 w/o Loquac due to HP drop
         Ammo = 'Incantor Stone',--2
         Waist = 'Plat. Mog. Belt',
-        Body = 'Rev. Surcoat +3',--10fc
+        Body = 'Rev. Surcoat +4',--10fc
         Ring1 = 'Moonlight Ring',
         Ear1 = 'Tuisto Earring',
         Ear2 = 'Etiolation Earring',
@@ -153,7 +154,7 @@ local sets = {
         Waist = 'Plat. Mog. Belt',
         Ring1 = 'Moonlight Ring',
         Ring2 = 'Moonlight Ring',
-        Body = 'Rev. Surcoat +3', 
+        Body = 'Rev. Surcoat +4', 
         Ear1 = 'Odnowa Earring +1',
         Neck = 'Moonlight Necklace', -- 15
         Legs = 'Founder\'s Hose', -- 30
@@ -462,7 +463,10 @@ profile.OnLoad = function()
 end
 
 profile.OnUnload = function()
-    gcinclude.Unload();
+    if gcinclude and gcinclude.Unload then gcinclude.Unload() end
+    package.loaded['common/gcinclude'] = nil
+    package.loaded['common/gcdisplay'] = nil
+    package.loaded['common/J-Haste'] = nil
 end
 
 profile.HandleCommand = function(args)

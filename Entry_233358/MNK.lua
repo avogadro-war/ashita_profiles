@@ -1,5 +1,6 @@
 local profile = {};
-gcinclude = gFunc.LoadFile('common\\gcinclude.lua');
+local gcinclude = require('common/gcinclude');
+local JHaste = require('common/J-Haste');
 
 local sets = {
     Idle = {
@@ -220,9 +221,11 @@ profile.OnLoad = function()
 end
 
 profile.OnUnload = function()
-    gcinclude.Unload();
+    if gcinclude and gcinclude.Unload then gcinclude.Unload() end
+    package.loaded['common/gcinclude'] = nil
+    package.loaded['common/gcdisplay'] = nil
+    package.loaded['common/J-Haste'] = nil
 end
-
 profile.HandleCommand = function(args)
     gcinclude.HandleCommands(args);
 end
@@ -243,19 +246,18 @@ profile.HandleDefault = function()
         if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
             gFunc.EquipSet('Tp_' .. gcdisplay.GetCycle('MeleeSet')) end
         if gcdisplay.GetToggle('AutoMA') then
-
             local maGearPool = {
                 -- Priority, Gear Slot, Item Name, Martial Arts value
                 {1, 'Body', 'Bhikku Cyclas +2', 7},
-                {2, 'Ear2', 'Mache Earring +1', 13},
+                --{2, 'Ear2', 'Mache Earring +1', 13},
                 --{3, 'Ear1', 'Mache Earring +1', 13},
             }
-            local maSet, totalMA = JHaste.GetDWGearSet(maGearPool)
+            local maSet, totalMA = JHaste.GetMAGearSet(maGearPool)
             if maSet then
                 if next(maSet) == nil then
         -- Optionally unequip all slots that might have had MA gear.
-                    gFunc.Equip('Ear1', nil)
-                    gFunc.Equip('Ear2', nil)
+                    --gFunc.Equip('Ear1', nil)
+                    --gFunc.Equip('Ear2', nil)
                     gFunc.Equip('Body', nil)
                     --etc
                 end
