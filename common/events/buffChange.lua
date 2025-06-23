@@ -1,6 +1,6 @@
-local event = require('common/event')
+local event = require('event');
 
-local zoneChange = require('common/zoneChange')
+local zoneChange = require('events.zoneChange');
 
 local buffGain = event:new();
 local buffLoss = event:new();
