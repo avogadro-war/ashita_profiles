@@ -3,6 +3,8 @@ local buffChange = require('common/buffChange')
 local jobChange = require('common/jobChange')
 local onAction = require('common/action')
 
+local proxy = {}
+
 local T = function(t) return t end
 
 local hasteChange = event:new();
@@ -120,9 +122,7 @@ local function getMaHaste()
     if (buffactive()[580]) then -- indi/geo haste
         maHaste = maHaste + (306 + 11 * geoBonus);  -- use `geoBonus` directly, not `gcinclude.settings.geoBonus`
     end
-    
-    print('[J-Haste] buffactive()[33] =', buffactive()[33])
-    
+        
     return maHaste;
 end
 
@@ -227,6 +227,8 @@ local function GetDWGearSet(pool)
     return gearSet, totalDW
 end
 
+proxy.GetDWGearSet = GetDWGearSet
+
 local function getMANeeded()
     local player = gData.GetPlayer();
     local weapon = (gData.GetEquipment().Main and gData.GetEquipment().Main.Name) or ''
@@ -275,6 +277,8 @@ local function GetMAGearSet(pool)
 
     return gearSet, totalMA
 end
+
+proxy.GetMAGearSet = GetMAGearSet
 
 local partyFromPacket = T {};
 
@@ -452,7 +456,7 @@ local metaProps = {
 }
 
 -- Proxy object
-local proxy = {}
+
 
 setmetatable(proxy, {
     __index = function(_, key)
@@ -469,8 +473,5 @@ setmetatable(proxy, {
         end
     end
 })
-
-proxy.GetDWGearSet = GetDWGearSet
-proxy.GetMAGearSet = GetMAGearSet
 
 return proxy
