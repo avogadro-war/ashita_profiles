@@ -1,6 +1,6 @@
-local event = require('event');
+local event = require('common\\event')
 
-local zoneChange = require('events.zoneChange');
+local zoneChange = require('common\\zoneChange')
 
 local buffGain = event:new();
 local buffLoss = event:new();
@@ -61,6 +61,8 @@ ashita.events.register('packet_in', 'buffChange_packet_in', function(e)
     for buffId, count in pairs(newBuffs) do
         buffs[buffId] = count;
     end
+
+    print('[buffChange] buffs table address:', tostring(buffs))
 end);
 
 return { buffs = buffs, buffGain = buffGain, buffLoss = buffLoss };

@@ -1,5 +1,5 @@
-local gcdisplay = {};
-local JHaste = gFunc.LoadFile('common\\J-Haste.lua');
+gcdisplay = {};
+local JHaste = require('common/J-Haste')
 
 local fonts = require('fonts');
 local Toggles = {};
@@ -72,8 +72,6 @@ function gcdisplay.Update()
 	SubLV = player:GetSubJobLevel();
 	Main = AshitaCore:GetResourceManager():GetString("jobs.names_abbr", MID);
 	Sub = AshitaCore:GetResourceManager():GetString("jobs.names_abbr", SID);
-	brdBonus = JHaste and JHaste.metatable.brdBonus or 'Error';
-	geoBonus = JHaste and JHaste.metatable.geoBonus or 'Error';
 end
 
 function gcdisplay.CreateToggle(name, default)
@@ -114,11 +112,9 @@ function gcdisplay.Unload()
 end
 
 function gcdisplay.Initialize()
-	gcdisplay.Update();
 	gcdisplay.FontObject = fonts.new(fontSettings);	
 	ashita.events.register('d3d_present', 'gcdisplay_present_cb', function ()
-		local display = MainLV .. Main .. '/' .. SubLV .. Sub ..'   Attk:' .. Attk .. '   Def:' .. Def .. '   BrdBonus: ' .. brdBonus .. '   GeoBonus: ' .. geoBonus;
-		for k, v in pairs(Toggles) do
+	local display = MainLV .. Main .. '/' .. SubLV .. Sub ..'   Attk:' .. Attk .. '   Def:' .. Def .. '   BrdBonus: ' .. (JHaste and JHaste.brdBonus or 'Error') .. '   GeoBonus: ' .. (JHaste and JHaste.geoBonus or 'Error');		for k, v in pairs(Toggles) do
 			display = display .. '   ';
 			if (v == true) then
 				display = display .. '|cFF00FF00|' .. k .. '|r';

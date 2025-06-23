@@ -1,7 +1,7 @@
-local event = gFunc.LoadFile('common\\event.lua')
-local buffChange = gFunc.LoadFile('common\\buffChange.lua')
-local jobChange = gFunc.LoadFile('common\\jobChange.lua')
-local onAction = gFunc.LoadFile('common\\action.lua');
+local event = require('common/event')
+local buffChange = require('common/buffChange')
+local jobChange = require('common/jobChange')
+local onAction = require('common/action')
 
 local T = function(t) return t end
 
@@ -13,7 +13,7 @@ local onSubJobChange = jobChange.onSubJobChange;
 
 local onBuffGain = buffChange.buffGain;
 local onBuffLoss = buffChange.buffLoss;
-local buffactive = buffChange.buffs;
+local function buffactive() return buffChange.buffs end
 
 local brdJAMult = 1;
 local brdBonus = 0;
@@ -23,7 +23,7 @@ local jobDW = 0;
 local jobh2hDelay = 480;
 
 local function getBrdBonus() return brdBonus; end
-local function setBrdBonus(val) brdBonus = val; end
+local function setBrdBonus(val) brdBonus = val end
 local function getGeoBonus() return geoBonus end
 local function setGeoBonus(val) geoBonus = val end
 
@@ -104,23 +104,25 @@ local function getMaHaste()
     local maHaste = 0;
 
     -- Haste/Haste2
-    if (buffactive[33]) then
+    if (buffactive()[33]) then
         maHaste = maHaste + (hasteLevel == 2 and 307 or 150);
     end
 
     -- Assume bards are playing optimal marches
-    for i = 1, buffactive[214] or 0 do
+    for i = 1, buffactive()[214] or 0 do
         maHaste = maHaste + getMarchHaste(marches[i]);
     end
 
-    if (buffactive[604]) then -- Mighty Guard
+    if (buffactive()[604]) then -- Mighty Guard
         maHaste = maHaste + 150;
     end
 
-    if (buffactive[580]) then -- indi/geo haste
+    if (buffactive()[580]) then -- indi/geo haste
         maHaste = maHaste + (306 + 11 * geoBonus);  -- use `geoBonus` directly, not `gcinclude.settings.geoBonus`
     end
-
+    
+    print('[J-Haste] buffactive()[33] =', buffactive()[33])
+    
     return maHaste;
 end
 
@@ -142,7 +144,7 @@ local function getJaHaste()
     local petIndex = AshitaCore:GetMemoryManager():GetEntity():GetPetTargetIndex(myIndex);
 
     --hasso
-    if (mainJob == 'SAM' or subJob == 'SAM') and buffactive[353] then
+    if (mainJob == 'SAM' or subJob == 'SAM') and buffactive()[353] then
         local hassoPieces = {
             ['Unkai Haidate +1'] = 15,
             ['Unkai Haidate +2'] = 26,
@@ -170,7 +172,7 @@ local function getJaHaste()
         jaHaste = jaHaste + 102
     end
     --last resort
-    if subJob == 'DRK' and buffactive[64] then
+    if subJob == 'DRK' and buffactive()[64] then
         jaHaste = jaHaste + 154
     end
     if (mainJob == 'DRG' and petIndex > 0 and AshitaCore:GetMemoryManager():GetEntity():GetHPPercent(petIndex) > 0) then
@@ -183,10 +185,10 @@ end
 local function getTotalHaste()
     local jaHaste = getJaHaste();
     local maHaste = getMaHaste();
-    local embravaHaste = buffactive[228] and 266 or 0;
+    local embravaHaste = buffactive()[228] and 266 or 0;
 
-    jaHaste = jaHaste <= 256 and jaHaste or 256;
-    maHaste = maHaste <= 448 and maHaste or 448;
+    jaHaste = math.min(jaHaste, 256);
+    maHaste = math.min(maHaste, 448);
 
     local total = gearHaste + jaHaste + maHaste + embravaHaste;
     return total <= 819 and total or 819;
@@ -201,6 +203,7 @@ local function getDwNeeded()
     else 
         return 'N/A'
     end
+    return dwNeeded
 end
 
 local function GetDWGearSet(pool)
@@ -249,10 +252,11 @@ local function getMANeeded()
     else 
         return 'N/A'
     end
+    return maNeeded
 end
 
 local function GetMAGearSet(pool)
-    local maNeeded = getDwNeeded()
+    local maNeeded = getMANeeded()
     if type(maNeeded) ~= 'number' or maNeeded <= 0 or type(pool) ~= 'table' then return {} end
 
     table.sort(pool, function(a, b) return a[1] < b[1] end) -- lower priority first
@@ -435,28 +439,38 @@ ashita.events.register('packet_in', 'j-haste_packet_cb', function(e)
     end
 end);
 
-local metatable = setmetatable({}, {
-    dwNeeded = { get = getDwNeeded },
-    maNeeded = {get = getMANeeded },
+local metaProps = {
+    dwNeeded   = { get = getDwNeeded },
+    maNeeded   = { get = getMANeeded },
     totalHaste = { get = getTotalHaste },
     magicHaste = { get = getMaHaste },
-    jobHaste = { get = getJaHaste },
-    gearHaste = { set = setGearHaste },
-    onChange = hasteChange,
-    brdBonus = { get = getBrdBonus, set = setBrdBonus },
+    jobHaste   = { get = getJaHaste },
+    gearHaste  = { set = setGearHaste },
+    brdBonus   = { get = getBrdBonus, set = setBrdBonus },
     geoBonus   = { get = getGeoBonus, set = setGeoBonus },
-
-    __index = function(self, key)
-        local v = getmetatable(self)[key]
-        return v and v.get and v.get() or v
-    end,
-    __newindex = function(self, i, v)   
-        local prop = getmetatable(self)[i]
-        if prop.set then prop.set(v) end
-    end
-});
-
-return {
-    metatable = metatable,
-    GetDWGearSet = GetDWGearSet
+    onChange   = hasteChange, -- not a get/set, direct reference
 }
+
+-- Proxy object
+local proxy = {}
+
+setmetatable(proxy, {
+    __index = function(_, key)
+        local prop = metaProps[key]
+        if type(prop) == 'table' and prop.get then
+            return prop.get()
+        end
+        return prop -- direct values like `onChange`
+    end,
+    __newindex = function(_, key, value)
+        local prop = metaProps[key]
+        if type(prop) == 'table' and prop.set then
+            return prop.set(value)
+        end
+    end
+})
+
+proxy.GetDWGearSet = GetDWGearSet
+proxy.GetMAGearSet = GetMAGearSet
+
+return proxy
