@@ -488,7 +488,7 @@ profile.HandleDefault = function()
         if (gcdisplay.GetCycle('MeleeSet') ~= 'Default') then
             gFunc.EquipSet('Tp_' .. gcdisplay.GetCycle('MeleeSet')) end
         if gcdisplay.GetToggle('AutoHasso') == true then
-            local maHaste = JHaste.metatable.magicHaste
+            local maHaste = JHaste.magicHaste
             if maHaste <= (389) then
                 local hasso = gData.GetBuffCount('Hasso')
                 if hasso > 0 then

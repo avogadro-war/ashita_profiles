@@ -1,6 +1,6 @@
 local profile = {};
 local gcinclude = require('common/gcinclude');
-local JHaste = require('common/J-Haste');
+local JHaste = require('common/J-Haste')
 
 local sets = {
     Idle = {
