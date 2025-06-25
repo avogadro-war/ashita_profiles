@@ -11,6 +11,7 @@ local hasteChange = event:new();
 
 local packetsIncoming = T {};
 
+local onMainJobChange = jobChange.onMainJobChange;
 local onSubJobChange = jobChange.onSubJobChange;
 
 local onBuffGain = buffChange.buffGain;
@@ -64,11 +65,12 @@ local function updateJobMA()
     jobh2hDelay = mainJobh2hDelay[mainJob] or subJobh2hDelay[subJob] or 480;
 end
 
-
 updateJobDW();
+onMainJobChange:register(updateJobDW);
 onSubJobChange:register(updateJobDW);
 
 updateJobMA();
+onMainJobChange:register(updateJobDW);
 onSubJobChange:register(updateJobMA);
 
 local gearHaste = 256;
@@ -122,7 +124,7 @@ local function getMaHaste()
     if (buffactive()[580]) then -- indi/geo haste
         maHaste = maHaste + (306 + 11 * geoBonus);  -- use `geoBonus` directly, not `gcinclude.settings.geoBonus`
     end
-        
+
     return maHaste;
 end
 
@@ -334,7 +336,7 @@ do
                 if (param == 57 and hasteLevel ~= 2) then
                     hasteLevel = 1;
                     hasteChange:trigger();
-                elseif (param == 511) then
+                elseif (param == 511 or param == 710) then
                     hasteLevel = 2;
                     hasteChange:trigger()
                 elseif (param == 417) then
@@ -345,6 +347,16 @@ do
                     hasteChange:trigger();
                 elseif (param == 419) then
                     addMarch('Advancing March');
+                    hasteChange:trigger();
+                end
+            end
+        elseif (category == 13) then
+            local action = unpackAction();
+            if (isTarget(action)) then
+                local param = action.Param;
+
+                if (param == 602) then
+                    hasteLevel = 2;
                     hasteChange:trigger();
                 end
             end
