@@ -196,6 +196,39 @@ local function getTotalHaste()
     return total <= 819 and total or 819;
 end
 
+-----------------------------------------------------------
+--                      Dual Wield                       --
+-----------------------------------------------------------
+
+--[[ This goes into profile, comment below dwGearPool definition indicates how to structure
+local dwGearPool = {
+    -- Priority, Gear Slot, Item Name, Dual Wield value
+    {1, 'Back', { Name = "Camulus\'s Cape", Augment = { ['"Dual Wield"+10'] = true } }, 10},
+    {2, 'Ear1', 'Eabani Earring', 4},
+    {3, 'Ear2', 'Suppanomimi', 5},
+    {4, 'Waist', 'Reiki Yotai', 7},
+}
+    
+This goes into the engaged section: 
+if ((((YOUR VARIABLE HERE)))) then
+    local dwSet, totalDW = JHaste.GetDWGearSet(dwGearPool)
+    if dwSet then
+        if next(dwSet) == nil then
+        -- Optionally unequip all slots that might have had DW gear.
+            gFunc.Equip('Ear1', nil)
+            gFunc.Equip('Ear2', nil)
+            gFunc.Equip('Back', nil)
+            gFunc.Equip('Waist', nil)
+            --etc
+        end
+        for slot, item in pairs(dwSet) do
+            gFunc.Equip(slot, item)
+        end
+    end
+end
+
+]]
+
 local function getDwNeeded()
     local player = gData.GetPlayer();
     local mainJob = player.MainJob;
@@ -230,6 +263,41 @@ local function GetDWGearSet(pool)
 end
 
 proxy.GetDWGearSet = GetDWGearSet
+
+
+-----------------------------------------------------------
+--                    Martial Arts                       --
+-----------------------------------------------------------
+
+--[[
+
+local maGearPool = {
+    -- Priority, Gear Slot, Item Name, Martial Arts value
+    {1, 'Body', 'Bhikku Cyclas +2', 7},
+    --{2, 'Ear2', 'Mache Earring +1', 13},
+    --{3, 'Ear1', 'Mache Earring +1', 13},
+}
+
+This goes into the engaged section: 
+
+if (((YOUR VARIABLE HERE))) then
+    
+    local maSet, totalMA = JHaste.GetMAGearSet(maGearPool)
+    if maSet then
+        if next(maSet) == nil then
+-- Optionally unequip all slots that might have had MA gear.
+            --gFunc.Equip('Ear1', nil)
+            --gFunc.Equip('Ear2', nil)
+            gFunc.Equip('Body', nil)
+            --etc
+        end
+        for slot, item in pairs(maSet) do
+            gFunc.Equip(slot, item)
+        end
+    end
+end
+
+]]
 
 local function getMANeeded()
     local player = gData.GetPlayer();
