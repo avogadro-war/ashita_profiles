@@ -1,8 +1,8 @@
 return T{
     -- Dark Thorn
-    { 'uses Dark Thorn', '/echo Spikes!; sound:mgs.wav' },
+    { 'Dark Thorn', '/echo Spikes!; sound:mgs.wav' },
 
     -- Fatal Allure
-    { 'uses Fatal Allure', '/echo Charm!; sound:tf2.wav' },
+    { 'Fatal Allure', '/echo Charm!; sound:tf2.wav' },
 
 }

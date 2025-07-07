@@ -266,7 +266,7 @@ end)
 -- 🧠 Auto-load by job & target
 --------------------------------------------------------------------------------
 local known_bosses = {
-    ['Lilith'] = 'lilith',
+    ['Lady Lilith'] = 'lilith',
     ['Odin']   = 'odin',
     ['Glassy Thinker'] = 'thinker',
     -- Add more as needed
