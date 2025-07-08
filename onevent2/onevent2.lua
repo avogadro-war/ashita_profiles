@@ -12,9 +12,8 @@ addon.link    = 'https://ashitaxi.com/';
 
 require('common');
 local chat = require('chat');
-
 --------------------------------------------------------------------------------
--- 📦 State
+-- State
 --------------------------------------------------------------------------------
 local onevent = {
     job_triggers  = T{},
@@ -23,10 +22,10 @@ local onevent = {
     last_boss     = nil,
     paused        = false,
     auto_load     = true,  -- starts enabled
+    bufflose_alerts = {},
 };
-
 --------------------------------------------------------------------------------
--- 🛠 Helpers
+-- Helpers
 --------------------------------------------------------------------------------
 local function pause() onevent.paused = true; end
 local function unpause() onevent.paused = false; end
@@ -43,31 +42,55 @@ function string.split(s, sep)
     local t={} for str in string.gmatch(s, "([^"..sep.."]+)") do table.insert(t, str) end
     return t
 end
-
 --------------------------------------------------------------------------------
--- 📦 Loaders
+-- Loaders
 --------------------------------------------------------------------------------
 local function load_job_triggers(setname)
     local path = string.format('%striggers/jobs/%s.lua', addon.path, setname)
-    local ok, triggers = pcall(dofile, path)
-    if ok and type(triggers) == 'table' then
+    local ok, jobfile = pcall(dofile, path)
+
+    if ok and type(jobfile) == 'table' then
         local oldCount = #onevent.job_triggers
-        onevent.job_triggers = T(triggers)
-        print(chat.header(addon.name):append(chat.message(('Loaded job triggers: %s (replaced %d)'):fmt(chat.success(setname), oldCount))))
+        -- Accept fields: chat_triggers and bufflose_alerts
+        onevent.job_triggers = T(jobfile.chat_triggers or {})
+        onevent.bufflose_alerts = jobfile.bufflose_alerts or {}
+
+        print(chat.header(addon.name):append(chat.message(
+            ('Loaded job triggers: %s (replaced %d)'):fmt(chat.success(setname), oldCount)
+        )))
     else
-        print(chat.header(addon.name):append(chat.error(('Failed to load job trigger set: %s'):fmt(chat.success(setname)))))
+        print(chat.header(addon.name):append(chat.error(
+            ('Failed to load job trigger set: %s'):fmt(chat.success(setname))
+        )))
     end
 end
 
 local function merge_job_triggers(setname)
     local path = string.format('%striggers/jobs/%s.lua', addon.path, setname)
-    local ok, triggers = pcall(dofile, path)
-    if ok and type(triggers) == 'table' then
+    local ok, jobfile = pcall(dofile, path)
+
+    if ok and type(jobfile) == 'table' then
         local oldCount = #onevent.job_triggers
-        triggers:ieach(function (v) table.insert(onevent.job_triggers, v) end)
-        print(chat.header(addon.name):append(chat.message(('Merged %d triggers into job triggers; total now: %d'):fmt(#triggers, #onevent.job_triggers))))
+
+        -- Merge chat triggers
+        if jobfile.chat_triggers then
+            jobfile.chat_triggers:ieach(function (v)
+                table.insert(onevent.job_triggers, v)
+            end)
+        end
+        -- Merge bufflose_alerts
+        if jobfile.bufflose_alerts then
+            for k, v in pairs(jobfile.bufflose_alerts) do
+                onevent.bufflose_alerts[k] = v
+            end
+        end
+        print(chat.header(addon.name):append(chat.message(
+            ('Merged %d triggers; total now: %d'):fmt(#(jobfile.chat_triggers or {}), #onevent.job_triggers)
+        )))
     else
-        print(chat.header(addon.name):append(chat.error(('Failed to merge job trigger set: %s'):fmt(chat.success(setname)))))
+        print(chat.header(addon.name):append(chat.error(
+            ('Failed to merge job trigger set: %s'):fmt(chat.success(setname))
+        )))
     end
 end
 
@@ -82,9 +105,8 @@ local function load_boss_triggers(setname)
         print(chat.header(addon.name):append(chat.error(('Failed to load boss trigger set: %s'):fmt(chat.success(setname)))))
     end
 end
-
 --------------------------------------------------------------------------------
--- 📢 Help
+-- Help
 --------------------------------------------------------------------------------
 local function print_help(isError)
     if isError then
@@ -111,18 +133,16 @@ local function print_help(isError)
         print(chat.header(addon.name):append(chat.error('Usage: ')):append(chat.message(v[1]):append(' - ')):append(chat.color1(6, v[2])))
     end)
 end
-
 --------------------------------------------------------------------------------
--- ✏ Parse /onevent add
+-- Parse /onevent add
 --------------------------------------------------------------------------------
 local function split_cmd(cmd)
     local cleaned = cmd:sub(cmd:find('/onevent add') and 14 or 9)
     local t, a = cleaned:match('([^,]+)%s*|%s*(.+)')
     return t and t:trim(), a and a:trim()
 end
-
 --------------------------------------------------------------------------------
--- 🧠 Command handler
+-- Command handler
 --------------------------------------------------------------------------------
 local function cmd(e, args)
     local sub = args[2]:lower()
@@ -209,9 +229,8 @@ local function cmd(e, args)
 
     print_help(true)
 end
-
 --------------------------------------------------------------------------------
--- 📡 Command event
+-- Command event
 --------------------------------------------------------------------------------
 ashita.events.register('command', 'command_cb', function (e)
     local args = e.command:args()
@@ -220,9 +239,8 @@ ashita.events.register('command', 'command_cb', function (e)
     if #args <= 1 then return end
     (function() end):dispatch(pause, cmd, unpause)(e, args)
 end)
-
 --------------------------------------------------------------------------------
--- 📩 Text in event
+-- Text in event
 --------------------------------------------------------------------------------
 ashita.events.register('text_in', 'text_in_cb', function (e)
     -- Don't do anything while paused
@@ -239,7 +257,7 @@ ashita.events.register('text_in', 'text_in_cb', function (e)
                         local soundFile = act:sub(7):trim()
                         -- Build full path: addon.path points to your addon folder
                         local soundPath = string.format('%ssounds\\%s', addon.path, soundFile)
-                        print(chat.header(addon.name):append(chat.message('Playing sound: ' .. addon.path .. 'sounds\\mgs.wav')))
+                        print(chat.header(addon.name):append(chat.message('Playing sound: ' .. soundPath)))
                         ashita.misc.play_sound(soundPath)
                     else
                         -- Defensive: get chat manager safely
@@ -260,15 +278,13 @@ ashita.events.register('text_in', 'text_in_cb', function (e)
     process_triggers(onevent.boss_triggers)
 
 end)
-
-
 --------------------------------------------------------------------------------
--- 🧠 Auto-load by job & target
+-- Auto-load by job & target
 --------------------------------------------------------------------------------
 local known_bosses = {
-    ['Lady Lilith'] = 'lilith',
-    ['Odin']   = 'odin',
-    ['Glassy Thinker'] = 'thinker',
+    ['lady lilith']      = 'lilith',
+    ['odin']             = 'odin',
+    ['glassy thinker']   = 'thinker',
     -- Add more as needed
 }
 local jobNames = {
@@ -296,31 +312,46 @@ ashita.events.register('d3d_present', 'auto_load_check', function ()
     end
 
     -- Auto-load by boss target
-    local targetName = nil  -- local variable to avoid globals
-
     local mem = AshitaCore:GetMemoryManager()
     if not mem then return end
 
     local targetMgr = mem:GetTarget()
     local entityMgr = mem:GetEntity()
-    if not targetMgr or not entityMgr or type(entityMgr.GetEntity) ~= 'function' then return end
+    if not targetMgr or not entityMgr then
+        print(chat.header(addon.name):append(chat.error('TargetMgr or EntityMgr missing')))
+        return
+    end
 
     local targetIndex = targetMgr:GetTargetIndex(0)
     if targetIndex and targetIndex > 0 then
-        -- Use pcall to protect against errors in GetEntity
-        local ok, entity = pcall(entityMgr.GetEntity, entityMgr, targetIndex)
-        if ok and entity and type(entity.Name) == 'string' then
-            targetName = entity.Name
+        local targetName = entityMgr:GetName(targetIndex)
+        if targetName and type(targetName) == 'string' and targetName ~= '' then
+            local targetLower = targetName:lower()
+            if targetLower ~= onevent.last_boss then
+                local trigger_file = known_bosses[targetLower]
+                if trigger_file then
+                    load_boss_triggers(trigger_file)
+                    print(chat.header(addon.name):append(chat.message(('Auto-loaded boss triggers: %s'):fmt(targetName))))
+                    onevent.last_boss = targetLower
+                end
+            end
         end
     end
+end)
 
-    if targetName and targetName ~= '' and targetName ~= onevent.last_boss then
-        local trigger_file = known_bosses[targetName]
-        if trigger_file then
-            load_boss_triggers(trigger_file)
-            print(chat.header(addon.name):append(chat.message(('Auto-loaded boss triggers: %s'):fmt(targetName))))
-            onevent.last_boss = targetName
-        end
+ashita.events.register('packet_in', 'bufflose_cb', function (e)
+    if onevent.paused then return end
+    if e.id ~= 0x29 then return end
+
+    -- Parse the fields from the packet:
+    local param_1    = struct.unpack('I', e.data, 0x0C + 1) -- buff id or other param
+    local message_id = struct.unpack('H', e.data, 0x18 + 1) -- message ID (e.g. 206 = buff loss)
+
+    -- Check for buff loss message
+    if message_id == 206 and onevent.bufflose_alerts[param_1] then
+        local soundFile = onevent.bufflose_alerts[param_1]
+        local soundPath = string.format('%ssounds\\%s', addon.path, soundFile)
+        print(chat.header(addon.name):append(chat.message(('Buff %d wore off - playing %s'):fmt(param_1, soundFile))))
+        ashita.misc.play_sound(soundPath)
     end
-
 end)
