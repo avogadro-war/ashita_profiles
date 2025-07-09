@@ -4,9 +4,9 @@ return {
         --{ 'readies Fatal Allure', '/echo Charm!; sound:tf2.wav' },
     },
     bufflose_alerts = T{
-        [407] = 'factorio.wav',  -- Hasso
-        [178] = 'factorio.wav',  -- Seigan
-        [589] = 'wompwomp.wav',  -- Meikyo Shisui
+        [407] = 'factorio.wav',  -- Klimaform
+        [178] = 'factorio.wav',  -- Firestorm I
+        [589] = 'factorio.wav',  -- Firestorm II
         -- other buff IDs
     }
 }
