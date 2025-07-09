@@ -6,9 +6,8 @@
 
 addon.name    = 'onevent2';
 addon.author  = 'atom0s + Avogadro';
-addon.version = '4.0';
+addon.version = '1.0';
 addon.desc    = 'Reacts to chat with commands, sounds; auto-loads job/boss triggers.';
-addon.link    = 'https://ashitaxi.com/';
 
 --------------------------------------------------------------------------------
 -- Dependancies
