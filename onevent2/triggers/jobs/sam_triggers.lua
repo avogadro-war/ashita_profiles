@@ -7,7 +7,7 @@ return {
         [353] = 'factorio.wav',  -- Hasso
         [354] = 'factorio.wav',  -- Seigan
         [54]  = 'wompwomp.wav',  -- Meikyo Shisui
-        [501] = 'wompwomp.wav',  -- Yaegasumi
+        [501] = 'wompwomp.wav', -- Yaegasumi
         -- other buff IDs
     }
 }

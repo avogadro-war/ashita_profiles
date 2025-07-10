@@ -1,5 +1,5 @@
 return T{
-    
+
     -- Dark Thorn
     { 'Dark Thorn', '/echo Spikes!; sound:mgs.wav' },
 
@@ -7,6 +7,6 @@ return T{
     { 'Fatal Allure', '/echo Charm!; sound:tf2.wav' },
 
     -- Dark Thorn Dispel
-    { 'Lady Lilith (Dread Spikes)', '/echo Spikes dispelled.; sound:no.wav' },
+    { 'Dread Spikes', '/echo Spikes dispelled.; sound:no.wav' },
 
 }
