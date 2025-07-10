@@ -11,5 +11,13 @@ return {
         [33]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Haste
         [116] = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Phalanx
         -- other buff IDs...
-    }
+    },
+    buffgain_alerts = {
+        [15]  = 'doom.wav',                                        -- Doom
+        [6]   = 'debuff.wav',                                      -- Silence
+        [4]   = 'debuff.wav',                                      -- Paralyze
+        [16]  = 'debuff.wav',                                      -- Amnesia
+        [177] = 'debuff.wav',                                      -- Encumbrance
+        -- etc.
+    },
 }
