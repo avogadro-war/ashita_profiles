@@ -93,22 +93,33 @@ Trigger files are Lua files that return a table.
 
 Path: `triggers/jobs/<job>_triggers.lua`
 
-Example (sam_triggers.lua):
+Example (rdm_triggers.lua):
 ```
 return {
-    chat_triggers = {
-        { 'Light Skillchain', '/p → LIGHT skillchain!;sound:light.wav' },
-        { 'Darkness Skillchain', '/p → DARKNESS!;sound:darkness.wav' },
+    chat_triggers = T{
+        -- { 'readies Dark Thorn', '/echo Spikes!; sound:mgs.wav' },
+        { 'Mortal Ray',    '/echo Turn!; sound:tf2.wav' },
+        { 'longer weighed down', 'sound: stop.wav' },
+    },
+    bufflose_alerts = T{
+        [432] = 'doorcat.wav',                                     -- Temper
+        [419] = 'doorcat.wav',                                     -- Composure
+        [48]  = 'wompwomp.wav',                                    -- Chainspell
+        [43]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Refresh
+        [33]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Haste
+        [116] = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Phalanx
+        [11]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
+        [12]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
+        -- other buff IDs...
     },
     buffgain_alerts = {
-        [272] = 'buff_gain.wav'  -- Example buff ID → sound file
+        [15]  = 'doom.wav',                                        -- Doom
+        [6]   = 'debuff.wav',                                      -- Silence
+        [4]   = 'debuff.wav',                                      -- Paralyze
+        [16]  = 'debuff.wav',                                      -- Amnesia
+        [177] = 'debuff.wav',                                      -- Encumbrance
+        -- etc.
     },
-    bufflose_alerts = {
-        [11] = {
-            self = 'gravity_lost.wav',
-            other = 'gravity_on_target.wav'
-        }
-    }
 }
 ```
 
