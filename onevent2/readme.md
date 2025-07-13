@@ -8,7 +8,6 @@ Supports auto-loading triggers by job, boss, and zone.
 ## 📂 Directory Structure
 ```
 onevent2/
-├── addon.xml
 ├── onevent2.lua ← Main addon
 ├── packet_dedupe.lua ← Deduplication helper
 ├── bufftracker.lua ← Buff gain/loss detection
@@ -23,8 +22,8 @@ onevent2/
 │ └── zones/
 │   └── walk_of_echoes.lua
 └── sounds/
-├── gravity_lost.wav
-└── buff_gain.wav
+    ├── stop.wav
+    └── tf2.wav
 ```
 ## ⚙ How it works
 
