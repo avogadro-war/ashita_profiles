@@ -28,7 +28,7 @@ onevent2/
 │ │ ├── ody_boss1.lua
 │ │ └── ...
 │ └── zones/
-│ │ └── walk_of_echoes.lua
+│ │ ├── walk_of_echoes.lua
 │ │ └── ...
 └── sounds/
     ├── stop.wav
