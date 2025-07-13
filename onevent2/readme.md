@@ -180,8 +180,10 @@ known.zones = {
 
     Original by atom0s
 
-    Buff tracking, audio alert functionality, dedupe extensions by Avogadro
-
+    Buff tracking, audio alert functionality by Avogadro
+    
+    Dedupe inspired by Thorny/Simplelog
+    
     Buff events / zone change pattern inspired by Will
 
 ❤️ Contribute
