@@ -91,7 +91,7 @@ Uses a deduplication system to avoid reacting multiple times to repeated packets
 Trigger files are Lua files that return a table.
 **Jobs**
 
-Path: triggers/jobs/<job>_triggers.lua
+Path: `triggers/jobs/<job>_triggers.lua`
 
 Example (sam_triggers.lua):
 ```
@@ -146,15 +146,14 @@ known.bosses = {
 }
 
 known.zones = {
-    [295] = 'walk_of_echoes' -- zoneId → filename (without .lua)
+    [295] = 'walk_of_echoes' 
 }
 ```
-    Trigger files must return a table in the correct format (see examples above).
-
-    Sound files should be in the /sounds folder, named to match what you reference.
+Trigger files must return a table in the correct format (see examples above).
+Sound files should be in the /sounds folder, named to match what you reference.
 
 🐛 **Debugging tips**
-    Use /onevent debug to toggle detailed logs.
+    Use `/onevent debug` to toggle detailed logs.
     Check Ashita console if a sound or command fails.
     Verify your trigger file returns a valid table; syntax errors will prevent loading.
 
