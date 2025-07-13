@@ -1,6 +1,12 @@
 # 📦 onevent2 – Ashita4 Addon
 
-Reacts to chat, buffs, zone changes, and bosses by running commands and playing sounds.  
+Reacts to events defined by trigger files that evaluate and play audio alerts in response to:
+
+- Chat events
+- Status Gain and Status Loss (self and party)
+- Events in zone
+- Boss specific events  
+    
 Supports auto-loading triggers by job, boss, and zone.
 
 ---
@@ -91,9 +97,8 @@ Trigger files are Lua files that return a table.
 
 **Jobs**
 
-Path: `triggers/jobs/<job>_triggers.lua`
-
-Example (rdm_triggers.lua):
+- Path: `triggers/jobs/<job>_triggers.lua`
+- Example (rdm_triggers.lua):
 ```
 return {
     chat_triggers = T{
@@ -125,10 +130,8 @@ return {
 
 **Bosses**
 
-Path: triggers/bosses/<boss>.lua
-
-Example:
-
+- Path: triggers/bosses/<boss>.lua
+- Example:
 ```
 return {
     { 'The boss is readying.*Ultimate Ability', '/p Ultimate incoming!;sound:alert.wav' },
@@ -137,9 +140,8 @@ return {
 ```
 **Zones**
 
-Path: triggers/zones/<zone>.lua
-
-Example:
+- Path: triggers/zones/<zone>.lua
+- Example:
 
 ```
 return {
@@ -149,9 +151,8 @@ return {
 
 ✏ **How to add triggers**
 
-Boss / zone names must be in config/known.lua 
-
-Add entries like:
+- Boss / zone names must be in config/known.lua to auto-load
+- Add entries like:
 ```
 known.bosses = {
     ['odin'] = 'odin.lua',
@@ -162,14 +163,14 @@ known.zones = {
     [295] = 'walk_of_echoes' 
 }
 ```
-Trigger files must return a table in the correct format (see examples above).
-Sound files should be in the /sounds folder, named to match what you reference.
+- Trigger files must return a table in the correct format (see examples above).
+- Sound files should be in the /sounds folder, named to match what you reference.
 
 🐛 **Debugging tips**
 
-Use `/onevent debug` to toggle detailed logs.
-Check Ashita console if a sound or command fails.
-Verify your trigger file returns a valid table; syntax errors will prevent loading.
+- Use `/onevent debug` to toggle detailed logs.
+- Check Ashita console if a sound or command fails.
+- Verify your trigger file returns a valid table; syntax errors will prevent loading.
 
 📜 **License / Credits**
 
