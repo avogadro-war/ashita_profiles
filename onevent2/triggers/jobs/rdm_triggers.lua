@@ -1,7 +1,8 @@
 return {
     chat_triggers = T{
         -- { 'readies Dark Thorn', '/echo Spikes!; sound:mgs.wav' },
-        -- { 'readies Fatal Allure', '/echo Charm!; sound:tf2.wav' },
+        { 'Mortal Ray',    '/echo Turn!; sound:tf2.wav' },
+        { 'longer weighed down', 'sound: stop.wav' },
     },
     bufflose_alerts = T{
         [432] = 'doorcat.wav',                                     -- Temper
@@ -10,6 +11,8 @@ return {
         [43]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Refresh
         [33]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Haste
         [116] = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Phalanx
+        [11]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
+        [12]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
         -- other buff IDs...
     },
     buffgain_alerts = {

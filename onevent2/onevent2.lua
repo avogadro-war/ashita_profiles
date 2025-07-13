@@ -1,6 +1,6 @@
 --[[
 * Onevent2 Addon - Auto-load by job, boss, zone; reacts to chat & buffs with commands & sounds.
-* Author: atom0s + extended by Avogadro
+* Author: atom0s + extended by Avogadro + library code by Will
 --]]
 
 addon.name    = 'onevent2';
@@ -11,9 +11,10 @@ addon.desc    = 'Reacts to chat, buffs, auto-loads triggers by job/boss/zone.';
 -- Dependencies
 --------------------------------------------------------------------------------
 require('common')
-local known = require('config/known')
-local chat = require('chat')
-local bufftracker = require('bufftracker')
+local known         = require('config/known')
+local chat          = require('chat')
+local bufftracker   = require('bufftracker')
+local packet_dedupe = require('packet_dedupe')
 --------------------------------------------------------------------------------
 -- Managers
 --------------------------------------------------------------------------------
@@ -22,6 +23,7 @@ local targetMgr = memMgr and memMgr:GetTarget()
 local entityMgr = memMgr and memMgr:GetEntity()
 local partyMgr  = memMgr and memMgr:GetParty()
 local playerMgr = memMgr and memMgr:GetPlayer()
+local chatManager = AshitaCore and AshitaCore:GetChatManager()
 --------------------------------------------------------------------------------
 -- State
 --------------------------------------------------------------------------------
@@ -34,16 +36,19 @@ local onevent = {
     last_job           = nil,
     last_boss          = nil,
     last_zone          = nil,
+    last_zoneid        = nil,
     paused             = false,
     auto_load          = true,
     debug              = false,
 }
+
 --------------------------------------------------------------------------------
 -- Config
 --------------------------------------------------------------------------------
 local known_bosses = known.bosses
 local known_zones  = known.zones
 local jobNames     = known.jobs
+local sounds_path  = addon.path .. 'sounds\\'
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
@@ -56,6 +61,16 @@ end
 local function file_exists(path)
     local ok, f = pcall(io.open, path, "r")
     if ok and f then f:close(); return true end
+    return false
+end
+local function is_party_or_player(actor_id)
+    if not partyMgr then return false end
+    for i = 0, 5 do
+        local member_id = partyMgr:GetMemberServerId(i)
+        if member_id > 0 and member_id == actor_id then
+            return true
+        end
+    end
     return false
 end
 --------------------------------------------------------------------------------
@@ -76,13 +91,13 @@ end
 -- Process triggers
 --------------------------------------------------------------------------------
 local function process_triggers(triggers, e)
-    triggers:ieach(function(v)
-        if e.message_modified:contains(v[1]) then
-            local actions = v[2]:split(';')
+    for _, v in ipairs(triggers) do
+        if string.find(e.message_modified, v[1], 1, true) then
+            local actions = split(v[2], ';')
             for _, act in ipairs(actions) do
                 act = act:trim()
                 if startswith(act, 'sound:') then
-                    local soundPath = string.format('%ssounds\\%s', addon.path, act:sub(7):trim())
+                    local soundPath = sounds_path .. act:sub(7):trim()
                     if file_exists(soundPath) then
                         ashita.misc.play_sound(soundPath)
                         debug_log('Playing sound: ' .. soundPath)
@@ -90,14 +105,13 @@ local function process_triggers(triggers, e)
                         debug_log('Missing sound file: ' .. soundPath)
                     end
                 else
-                    local chatManager = AshitaCore and AshitaCore:GetChatManager()
                     if chatManager then chatManager:QueueCommand(1, act)
                     else debug_log('ChatManager unavailable; could not run: ' .. act)
                     end
                 end
             end
         end
-    end)
+    end
 end
 --------------------------------------------------------------------------------
 -- Buff gain/loss
@@ -105,7 +119,7 @@ end
 bufftracker.buffGain:register(function(buff_id)
     local alert = onevent.buffgain_alerts[buff_id]
     if alert then
-        local soundPath = string.format('%ssounds\\%s', addon.path, alert)
+        local soundPath = sounds_path .. alert
         if file_exists(soundPath) then
             ashita.misc.play_sound(soundPath)
             debug_log(('Buff gained %d: playing %s'):fmt(buff_id, alert))
@@ -125,23 +139,27 @@ bufftracker.buffLoss:register(function(buff_id, actor_id)
         debug_log('Player server ID not ready yet; skipping buffLoss')
         return
     end
-    local is_self = (actor_id == my_id)
-    local who = is_self and 'self' or 'other'
-    local alert = onevent.bufflose_alerts[buff_id]
 
+    local is_self_or_party = is_party_or_player(actor_id)
+    local who = is_self_or_party and 'self_or_party' or 'other'
+    local alert = onevent.bufflose_alerts[buff_id]
     local soundFile = nil
+    
     if type(alert) == 'string' then
-        if actor_id == my_id then soundFile = alert end
+        if is_self_or_party then soundFile = alert end
     elseif type(alert) == 'table' then
-        if actor_id == my_id and alert.self then soundFile = alert.self
-        elseif actor_id ~= my_id and alert.other then soundFile = alert.other end
+        if is_self_or_party and alert.self then
+            soundFile = alert.self
+        elseif not is_self_or_party and alert.other then
+            soundFile = alert.other
+        end
     end
 
     if soundFile then
-        local soundPath = string.format('%ssounds\\%s', addon.path, soundFile)
+        local soundPath = sounds_path .. soundFile
         if file_exists(soundPath) then
             ashita.misc.play_sound(soundPath)
-            debug_log(('Buff %d wore off (%s): playing %s'):fmt(buff_id, actor_id == my_id and 'self' or 'other', soundFile))
+            debug_log(('Buff %d wore off (%s): playing %s'):fmt(buff_id, who, soundFile))
         else
             debug_log('Missing sound file: ' .. soundFile)
         end
@@ -306,11 +324,36 @@ ashita.events.register('d3d_present','auto',function()
             load_boss_triggers(known_bosses[name:lower()]); onevent.last_boss=name:lower(); debug_log_loaded('boss',name)
         end
     end
-    local zoneId=partyMgr and partyMgr:GetMemberZone(0)
-    if zoneId and known_zones[zoneId] then
-        local fname=known_zones[zoneId]:lower():gsub(' ','_')
-        if fname~=onevent.last_zone then load_zone_triggers(fname); onevent.last_zone=fname; debug_log_loaded('zone',fname) end
-    else
-        if #onevent.zone_triggers>0 then onevent.zone_triggers=T{}; onevent.last_zone=nil; debug_log('Cleared zone triggers (unknown zone '..tostring(zoneId)..')') end
+end)
+--------------------------------------------------------------------------------
+-- Clear zone + boss triggers on zone packet reception
+--------------------------------------------------------------------------------
+ashita.events.register('packet_in', 'zone_change', function(e)
+    if packet_dedupe.is_duplicate_packet(e) then return end
+
+    if e.id == 0x00A then  -- Zone update packet
+        local zoneId = struct.unpack('H', e.data, 0x10 + 1)
+        if zoneId and zoneId ~= onevent.last_zoneid then
+            onevent.zone_triggers = T{}
+            onevent.last_zone = nil
+            onevent.last_boss = nil
+            debug_log('Zone changed; cleared old zone triggers')
+            onevent.last_zoneid = zoneId
+            
+            if known_zones[zoneId] then
+                local fname = known_zones[zoneId]:lower():gsub(' ','_')
+                load_zone_triggers(fname)
+                onevent.last_zone = fname
+                debug_log_loaded('zone', fname)
+            else
+                debug_log(('Zone %d entered; no known triggers configured'):format(zoneId))
+            end
+        end
     end
+end)
+--------------------------------------------------------------------------------
+-- Avoid duplicate packets
+--------------------------------------------------------------------------------
+ashita.events.register('packet_chunk', 'onevent2_record_packets', function(e)
+    packet_dedupe.record_packets(e)
 end)

@@ -1,4 +1,5 @@
 local event = require('event')
+local packet_dedupe = require('packet_dedupe')
 local bufftracker = {}
 
 bufftracker.buffGain = event:new()
@@ -14,17 +15,29 @@ local function log(msg)
         print(('[bufftracker] %s'):fmt(msg))
     end
 end
-
+-- debug 0x29 messages
+local function hex_dump(str)
+    return (str:gsub('.', function(c)
+        return ('%02X '):format(c:byte())
+    end))
+end
 -- Track buff loss (0x29)
 ashita.events.register('packet_in', 'buff_loss_cb', function(e)
     if e.id ~= 0x29 then return end
+    if packet_dedupe.is_duplicate_packet(e) then 
+        e.blocked = true 
+        return 
+    end
 
-    local message_id = struct.unpack('H', e.data, 0x18 + 1)
+    if bufftracker.get_debug and bufftracker.get_debug() then
+        print('[bufftracker][debug] 0x29 raw: ' .. hex_dump(e.data))
+    end
+
+    local message_id = struct.unpack('H', e.data, 0x18 + 1) or 0
     if message_id ~= 206 then return end -- buff wears off
 
     local buff_id = struct.unpack('I', e.data, 0x0C + 1)
     local actor_id = struct.unpack('I', e.data, 0x08 + 1)
-
     if buff_id then
         bufftracker.buffLoss:trigger(buff_id, actor_id)
         log(('Lost buff %d by actor %d'):fmt(buff_id, actor_id))
@@ -39,9 +52,14 @@ ashita.events.register('packet_in', 'zoneChange_packet_in', function(e)
 end)
 
 bufftracker.last_buffs = bufftracker.last_buffs or T{}
-
+-- We only trigger gains; losses are handled by 0x29.
 ashita.events.register('packet_in', 'buff_resync_cb', function(e)
     if e.id ~= 0x063 then return end
+    if packet_dedupe.is_duplicate_packet(e) then 
+        e.blocked = true 
+        return 
+    end
+
     local type = ashita.bits.unpack_be(e.data_raw, 32, 8)
     if type ~= 0x09 then return end
 
