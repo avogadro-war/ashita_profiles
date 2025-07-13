@@ -21,7 +21,7 @@ onevent2/
 │ ├── bosses/
 │ │ └── ody_boss1.lua
 │ └── zones/
-│ └── walk_of_echoes.lua
+│   └── walk_of_echoes.lua
 └── sounds/
 ├── gravity_lost.wav
 └── buff_gain.wav
