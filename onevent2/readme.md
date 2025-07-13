@@ -22,14 +22,18 @@ onevent2/
 ├── triggers/
 │ ├── jobs/
 │ │ ├── sam_triggers.lua
-│ │ └── rdm_triggers.lua
+│ │ ├── rdm_triggers.lua
+│ │ └── ...
 │ ├── bosses/
-│ │ └── ody_boss1.lua
+│ │ ├── ody_boss1.lua
+│ │ └── ...
 │ └── zones/
-│   └── walk_of_echoes.lua
+│ │ └── walk_of_echoes.lua
+│ │ └── ...
 └── sounds/
     ├── stop.wav
     └── tf2.wav
+    └── ...
 ```
 ## ⚙ How it works
 
