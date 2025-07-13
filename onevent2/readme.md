@@ -88,6 +88,7 @@ Uses a deduplication system to avoid reacting multiple times to repeated packets
 🎵 **Trigger files**
 
 Trigger files are Lua files that return a table.
+
 **Jobs**
 
 Path: `triggers/jobs/<job>_triggers.lua`
@@ -147,8 +148,10 @@ return {
 ```
 
 ✏ **How to add triggers**
-    Boss / zone names must be in config/known.lua
-    Add entries like:
+
+Boss / zone names must be in config/known.lua 
+
+Add entries like:
 ```
 known.bosses = {
     ['odin'] = 'odin.lua',
@@ -163,9 +166,10 @@ Trigger files must return a table in the correct format (see examples above).
 Sound files should be in the /sounds folder, named to match what you reference.
 
 🐛 **Debugging tips**
-    Use `/onevent debug` to toggle detailed logs.
-    Check Ashita console if a sound or command fails.
-    Verify your trigger file returns a valid table; syntax errors will prevent loading.
+
+Use `/onevent debug` to toggle detailed logs.
+Check Ashita console if a sound or command fails.
+Verify your trigger file returns a valid table; syntax errors will prevent loading.
 
 📜 **License / Credits**
 
