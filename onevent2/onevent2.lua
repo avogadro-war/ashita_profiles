@@ -329,7 +329,6 @@ end)
 -- Clear zone + boss triggers on zone packet reception
 --------------------------------------------------------------------------------
 ashita.events.register('packet_in', 'zone_change', function(e)
-    if packet_dedupe.is_duplicate_packet(e) then return end
 
     if e.id == 0x00A then  -- Zone update packet
         local zoneId = struct.unpack('H', e.data, 0x10 + 1)
@@ -350,10 +349,4 @@ ashita.events.register('packet_in', 'zone_change', function(e)
             end
         end
     end
-end)
---------------------------------------------------------------------------------
--- Avoid duplicate packets
---------------------------------------------------------------------------------
-ashita.events.register('packet_chunk', 'onevent2_record_packets', function(e)
-    packet_dedupe.record_packets(e)
 end)

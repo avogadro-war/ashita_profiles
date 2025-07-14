@@ -1,5 +1,6 @@
 local event = require('event')
 local packet_dedupe = require('packet_dedupe')
+local struct = require('struct')
 local bufftracker = {}
 
 bufftracker.buffGain = event:new()
@@ -10,10 +11,17 @@ bufftracker.get_debug = nil -- to be set by main
 local memMgr = AshitaCore and AshitaCore:GetMemoryManager()
 local partyMgr = memMgr and memMgr:GetParty()
 local ignoreNext = false
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
 local function log(msg)
     if bufftracker.get_debug and bufftracker.get_debug() then
         print(('[bufftracker] %s'):fmt(msg))
     end
+end
+local function should_process_packet(e)
+    packet_dedupe.record_packets(e)
+    return not packet_dedupe.check_duplicates(e)
 end
 -- debug 0x29 messages
 local function hex_dump(str)
@@ -24,14 +32,9 @@ end
 -- Track buff loss (0x29)
 ashita.events.register('packet_in', 'buff_loss_cb', function(e)
     if e.id ~= 0x29 then return end
-    if packet_dedupe.is_duplicate_packet(e) then 
-        e.blocked = true 
-        return 
-    end
+    if not should_process_packet(e) then return end
 
-    if bufftracker.get_debug and bufftracker.get_debug() then
-        print('[bufftracker][debug] 0x29 raw: ' .. hex_dump(e.data))
-    end
+    log('[bufftracker][debug] 0x29 raw: ' .. hex_dump(e.data))
 
     local message_id = struct.unpack('H', e.data, 0x18 + 1) or 0
     if message_id ~= 206 then return end -- buff wears off
@@ -55,10 +58,7 @@ bufftracker.last_buffs = bufftracker.last_buffs or T{}
 -- We only trigger gains; losses are handled by 0x29.
 ashita.events.register('packet_in', 'buff_resync_cb', function(e)
     if e.id ~= 0x063 then return end
-    if packet_dedupe.is_duplicate_packet(e) then 
-        e.blocked = true 
-        return 
-    end
+    if not should_process_packet(e) then return end
 
     local type = ashita.bits.unpack_be(e.data_raw, 32, 8)
     if type ~= 0x09 then return end

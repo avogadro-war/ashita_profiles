@@ -1,51 +1,45 @@
-require('common')
 local ffi = require('ffi')
 local struct = require('struct')
 
-local packet_dedupe = {
-    last_chunk_buffer = nil,
-    reference_buffer = {},  -- Array of recent chunk buffers (each is a table of packet strings)
-    max_buffer_size = 3,    -- Keep last 3 chunks only
-}
+ffi.cdef[[
+    int32_t memcmp(const void* buff1, const void* buff2, size_t count);
+]];
 
-function packet_dedupe.record_packets(e)
 
-    if e.chunk_size == 0 then
-        packet_dedupe.last_chunk_buffer = {}
-        return
-    end
-    -- If last_chunk_buffer exists and current chunk equals previous chunk, 
-    -- insert last chunk buffer
-    -- Use memcmp to quickly detect if current chunk raw data matches last processed chunk;
-    -- only then do we treat packets from last chunk as candidates for duplicates.
-    if packet_dedupe.last_chunk_buffer and ffi.C.memcmp(e.data_raw, e.chunk_data_raw, e.size) == 0 then
-        if #packet_dedupe.reference_buffer >= packet_dedupe.max_buffer_size then
-            table.remove(packet_dedupe.reference_buffer, #packet_dedupe.reference_buffer)
+local last_chunk_buffer;
+local reference_buffer = T{};
+
+-- Called from packet_in when chunk packet received (e.chunk_data_raw + e.chunk_size)
+function record_packets(e)
+    if ffi.C.memcmp(e.data_raw, e.chunk_data_raw, e.size) == 0 then
+        if #reference_buffer > 2 then
+            reference_buffer[#reference_buffer] = nil
         end
-        table.insert(packet_dedupe.reference_buffer, 1, packet_dedupe.last_chunk_buffer)
-    end
 
-    -- Always prepare new last_chunk_buffer for current chunk
-    packet_dedupe.last_chunk_buffer = {}
+        if last_chunk_buffer then
+            table.insert(reference_buffer, 1, last_chunk_buffer)
+        end
 
-    local offset = 0
-    while offset < e.chunk_size do
-        local size = ashita_bits.unpack_be(e.chunk_data_raw, offset, 9, 7) * 4
-        if size == 0 then break end -- safety check
-
-        local chunk_packet = struct.unpack('c' .. size, e.chunk_data, offset + 1)
-        table.insert(packet_dedupe.last_chunk_buffer, chunk_packet)
-        offset = offset + size
+        last_chunk_buffer = T{};
+        local offset = 0;
+    
+        while (offset < e.chunk_size) do
+            local size = ashita.bits.unpack_be(e.chunk_data_raw, offset, 9, 7) * 4;
+            local chunk_packet = struct.unpack('c' .. size, e.chunk_data, offset + 1);
+            last_chunk_buffer:append(chunk_packet)
+            offset = offset + size;
+        end
     end
 end
 
-function packet_dedupe.is_duplicate_packet(e)
-    -- Unpack packet data to string once
+-- Called for each incoming packet: check if its content matches known duplicates
+
+function check_duplicates(e)
     local packet = struct.unpack('c' .. e.size, e.data, 1)
-    -- Check all recent buffered packets for duplicate
-    for _, chunk in ipairs(packet_dedupe.reference_buffer) do
-        for _, buffered_packet in ipairs(chunk) do
-            if packet == buffered_packet then
+    for _, chunk in ipairs(reference_buffer) do
+        for _, bufferEntry in ipairs(chunk) do
+            if packet == bufferEntry then
+                e.blocked = true
                 return true
             end
         end
