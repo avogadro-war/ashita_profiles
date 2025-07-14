@@ -32,7 +32,7 @@ end
 -- Track buff loss (0x29)
 ashita.events.register('packet_in', 'buff_loss_cb', function(e)
     if e.id ~= 0x29 then return end
-    if not should_process_packet(e) then return end
+    if packet_dedupe.check_duplicates(e) then return end
 
     log('[bufftracker][debug] 0x29 raw: ' .. hex_dump(e.data))
 
@@ -58,7 +58,7 @@ bufftracker.last_buffs = bufftracker.last_buffs or T{}
 -- We only trigger gains; losses are handled by 0x29.
 ashita.events.register('packet_in', 'buff_resync_cb', function(e)
     if e.id ~= 0x063 then return end
-    if not should_process_packet(e) then return end
+    if packet_dedupe.check_duplicates(e) then return end
 
     local type = ashita.bits.unpack_be(e.data_raw, 32, 8)
     if type ~= 0x09 then return end

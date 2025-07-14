@@ -13,7 +13,8 @@ addon.desc    = 'Reacts to chat, buffs, auto-loads triggers by job/boss/zone.';
 require('common')
 local known         = require('config/known')
 local chat          = require('chat')
-local bufftracker   = require('bufftracker')
+local autoload      = require('autoload')
+local packethandler = require('packethandler')
 local packet_dedupe = require('packet_dedupe')
 --------------------------------------------------------------------------------
 -- Managers
@@ -33,12 +34,7 @@ local onevent = {
     zone_triggers      = T{},
     bufflose_alerts    = {},
     buffgain_alerts    = {},
-    last_job           = nil,
-    last_boss          = nil,
-    last_zone          = nil,
-    last_zoneid        = nil,
     paused             = false,
-    auto_load          = true,
     debug              = false,
 }
 
@@ -76,7 +72,7 @@ end
 --------------------------------------------------------------------------------
 -- Debug Helpers
 --------------------------------------------------------------------------------
-bufftracker.get_debug = function()
+packethandler.get_debug = function()
     return onevent.debug
 end
 local function debug_log(msg)
@@ -96,7 +92,7 @@ local function process_triggers(triggers, e)
             local actions = split(v[2], ';')
             for _, act in ipairs(actions) do
                 act = act:trim()
-                if startswith(act, 'sound:') then
+                if act:lower():startswith('sound:') then
                     local soundPath = sounds_path .. act:sub(7):trim()
                     if file_exists(soundPath) then
                         ashita.misc.play_sound(soundPath)
@@ -116,7 +112,7 @@ end
 --------------------------------------------------------------------------------
 -- Buff gain/loss
 --------------------------------------------------------------------------------
-bufftracker.buffGain:register(function(buff_id)
+packethandler.buffGain:register(function(buff_id)
     local alert = onevent.buffgain_alerts[buff_id]
     if alert then
         local soundPath = sounds_path .. alert
@@ -131,7 +127,7 @@ bufftracker.buffGain:register(function(buff_id)
     end
 end)
 
-bufftracker.buffLoss:register(function(buff_id, actor_id)
+packethandler.buffLoss:register(function(buff_id, actor_id)
     if onevent.paused then return end
 
     local my_id = partyMgr and partyMgr:GetMemberServerId(0)
@@ -278,8 +274,8 @@ local commands = {
     mergejob= function(args) if args[3] then merge_job_triggers(args[3]) end end,
     loadboss= function(args) if args[3] then load_boss_triggers(args[3]) end end,
     loadzone= function(args) if args[3] then load_zone_triggers(args[3]) end end,
-    auto = function(args) if args[3]=='on' then onevent.auto_load=true print('Auto-load on')
-        elseif args[3]=='off' then onevent.auto_load=false print('Auto-load off')
+    auto = function(args) if args[3]=='on' then autoload.auto_load=true print('Auto-load on')
+        elseif args[3]=='off' then autoload.auto_load=false print('Auto-load off')
         else print('Usage: /onevent auto on|off') end end,
     debug = function() onevent.debug=not onevent.debug; print('Debug: '..tostring(onevent.debug)) end,
     pause = function() onevent.paused=true; print('Paused.') end,
@@ -305,48 +301,28 @@ ashita.events.register('text_in','react',function(e)
         process_triggers(onevent.zone_triggers,e)
     end
 end)
---------------------------------------------------------------------------------
--- Auto-load
---------------------------------------------------------------------------------
-local last_check=os.clock()
-ashita.events.register('d3d_present','auto',function()
-    if not onevent.auto_load or os.clock()-last_check<2 then return end
-    last_check=os.clock()
-    local jobId=playerMgr and playerMgr:GetMainJob()
-    local job=jobId and jobNames[jobId]
-    if job and job~=onevent.last_job then
-        load_job_triggers(job:lower()..'_triggers'); onevent.last_job=job; debug_log_loaded('job',job)
-    end
-    local target=targetMgr and targetMgr:GetTargetIndex(0)
-    if target and target>0 then
-        local name=entityMgr and entityMgr:GetName(target)
-        if name and known_bosses[name:lower()] and name:lower()~=onevent.last_boss then
-            load_boss_triggers(known_bosses[name:lower()]); onevent.last_boss=name:lower(); debug_log_loaded('boss',name)
-        end
+---------------------
+-- Dupe Prevention --
+---------------------
+ashita.events.register('packet_in', 'record_chunk_packets', function(e)
+    if e.id == 0x28 then
+        packet_dedupe.record_packets(e)
     end
 end)
 --------------------------------------------------------------------------------
--- Clear zone + boss triggers on zone packet reception
+-- Packet Handling
 --------------------------------------------------------------------------------
-ashita.events.register('packet_in', 'zone_change', function(e)
+packethandler.start()
+--------------------------------------------------------------------------------
+-- Auto-Load
+--------------------------------------------------------------------------------
+autoload.set_zone_trigger_loader(load_zone_triggers)
 
-    if e.id == 0x00A then  -- Zone update packet
-        local zoneId = struct.unpack('H', e.data, 0x10 + 1)
-        if zoneId and zoneId ~= onevent.last_zoneid then
-            onevent.zone_triggers = T{}
-            onevent.last_zone = nil
-            onevent.last_boss = nil
-            debug_log('Zone changed; cleared old zone triggers')
-            onevent.last_zoneid = zoneId
-            
-            if known_zones[zoneId] then
-                local fname = known_zones[zoneId]:lower():gsub(' ','_')
-                load_zone_triggers(fname)
-                onevent.last_zone = fname
-                debug_log_loaded('zone', fname)
-            else
-                debug_log(('Zone %d entered; no known triggers configured'):format(zoneId))
-            end
-        end
-    end
+ashita.events.register('d3d_present', 'auto', function()
+    autoload.check_and_load(
+        playerMgr, targetMgr, partyMgr, jobNames, known_bosses,
+        load_job_triggers, load_boss_triggers,
+        debug_log_loaded
+    )
 end)
+

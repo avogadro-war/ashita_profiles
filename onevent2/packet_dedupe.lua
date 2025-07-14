@@ -12,23 +12,23 @@ local reference_buffer = T{}
 
 -- Called from packet_in when chunk packet received (e.chunk_data_raw + e.chunk_size)
 function packet_dedupe.record_packets(e)
-    if ffi.C.memcmp(e.data_raw, e.chunk_data_raw, e.size) == 0 then
-        if #reference_buffer > 2 then
-            reference_buffer[#reference_buffer] = nil
-        end
+    if e.chunk_data_raw and e.chunk_size then
+        if ffi.C.memcmp(e.data_raw, e.chunk_data_raw, e.size) == 0 then
+            if #reference_buffer > 2 then
+                reference_buffer[#reference_buffer] = nil
+            end
+            if last_chunk_buffer then
+                table.insert(reference_buffer, 1, last_chunk_buffer)
+            end
 
-        if last_chunk_buffer then
-            table.insert(reference_buffer, 1, last_chunk_buffer)
-        end
-
-        last_chunk_buffer = T{}
-        local offset = 0
-
-        while (offset < e.chunk_size) do
-            local size = ashita.bits.unpack_be(e.chunk_data_raw, offset, 9, 7) * 4
-            local chunk_packet = struct.unpack('c' .. size, e.chunk_data, offset + 1)
-            last_chunk_buffer:append(chunk_packet)
-            offset = offset + size
+            last_chunk_buffer = T{}
+            local offset = 0
+            while (offset < e.chunk_size) do
+                local size = ashita.bits.unpack_be(e.chunk_data_raw, offset, 9, 7) * 4
+                local chunk_packet = struct.unpack('c' .. size, e.chunk_data, offset + 1)
+                last_chunk_buffer:append(chunk_packet)
+                offset = offset + size
+            end
         end
     end
 end

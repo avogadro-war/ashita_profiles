@@ -1,0 +1,86 @@
+require('common')
+
+local autoload = {
+    auto_load    = true,
+    last_check   = os.clock(),
+    last_job     = nil,
+    last_boss    = nil,
+    last_zoneid  = nil,
+}
+
+local packethandler = require('packethandler')
+local known_zones = require('config/known').zones
+
+local load_zone_triggers -- function to be set by main addon
+
+packethandler.onZoneChange:register(function(zoneId)
+    if known_zones and known_zones[zoneId] then
+        local zoneName = known_zones[zoneId]
+        local fname = zoneName:lower():gsub(' ', '_')
+        if load_zone_triggers then
+            load_zone_triggers(fname)
+            print(('Loaded zone triggers: %s'):format(fname))
+        else
+            print('Warning: load_zone_triggers function not set in autoload.lua')
+        end
+    else
+        print(('Zone %d entered; no known triggers configured'):format(zoneId))
+    end
+end)
+
+local function debug_log(msg)
+    -- Safe global checks for onevent.debug and chat
+    if _G.onevent and _G.onevent.debug and _G.chat and type(print) == 'function' then
+        print(_G.chat.header(addon.name):append(_G.chat.message(msg)))
+    end
+end
+
+function autoload.check_and_load(
+    playerMgr, targetMgr, partyMgr, jobNames, known_bosses,
+    load_job_triggers, load_boss_triggers,
+    debug_log_loaded
+)
+    if not autoload.auto_load then return end
+
+    local now = os.clock()
+    if now - autoload.last_check < 2 then return end
+    autoload.last_check = now
+
+    -- Job auto-load
+    if playerMgr and jobNames then
+        local jobId = playerMgr:GetMainJob()
+        local job   = jobId and jobNames[jobId]
+        if job and job ~= autoload.last_job then
+            local fname = job:lower() .. '_triggers'
+            load_job_triggers(fname)
+            autoload.last_job = job
+            if debug_log_loaded then debug_log_loaded('job', job) end
+        end
+    end
+
+    -- Boss auto-load
+    if targetMgr and known_bosses then
+        local targetIndex = targetMgr:GetTargetIndex(0)
+        if targetIndex and targetIndex > 0 then
+            local entityMgr = AshitaCore and AshitaCore:GetMemoryManager():GetEntity()
+            if entityMgr then
+                local name = entityMgr:GetName(targetIndex)
+                if name then
+                    local lname = name:lower()
+                    if known_bosses[lname] and lname ~= autoload.last_boss then
+                        load_boss_triggers(known_bosses[lname])
+                        autoload.last_boss = lname
+                        if debug_log_loaded then debug_log_loaded('boss', name) end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Setter to inject zone trigger loader from main addon
+function autoload.set_zone_trigger_loader(func)
+    load_zone_triggers = func
+end
+
+return autoload
