@@ -9,10 +9,14 @@ local autoload = {
 }
 
 local packethandler = require('packethandler')
-local known_zones = require('config/known').zones
+local known_zones   = require('config/known').zones
 
-local load_zone_triggers -- function to be set by main addon
+-- Function to be injected by main addon to actually load zone triggers
+local load_zone_triggers
 
+------------------------------------------------------------
+-- Zone auto-load
+------------------------------------------------------------
 packethandler.onZoneChange:register(function(zoneId)
     if known_zones and known_zones[zoneId] then
         local zoneName = known_zones[zoneId]
@@ -28,13 +32,18 @@ packethandler.onZoneChange:register(function(zoneId)
     end
 end)
 
+------------------------------------------------------------
+-- Debug log (only if debug enabled in main addon)
+------------------------------------------------------------
 local function debug_log(msg)
-    -- Safe global checks for onevent.debug and chat
     if _G.onevent and _G.onevent.debug and _G.chat and type(print) == 'function' then
         print(_G.chat.header(addon.name):append(_G.chat.message(msg)))
     end
 end
 
+------------------------------------------------------------
+-- Main periodic check: job + boss auto-load
+------------------------------------------------------------
 function autoload.check_and_load(
     playerMgr, targetMgr, partyMgr, jobNames, known_bosses,
     load_job_triggers, load_boss_triggers,
@@ -47,15 +56,13 @@ function autoload.check_and_load(
     autoload.last_check = now
 
     -- Job auto-load
-    if playerMgr and jobNames then
-        local jobId = playerMgr:GetMainJob()
-        local job   = jobId and jobNames[jobId]
-        if job and job ~= autoload.last_job then
-            local fname = job:lower() .. '_triggers'
-            load_job_triggers(fname)
-            autoload.last_job = job
-            if debug_log_loaded then debug_log_loaded('job', job) end
-        end
+    local jobId = playerMgr and playerMgr:GetMainJob()
+    local job   = jobId and jobNames[jobId]
+    if job and job ~= autoload.last_job then
+        local fname = job:lower()
+        load_job_triggers(fname)
+        autoload.last_job = job
+        if debug_log_loaded then debug_log_loaded('job', job) end
     end
 
     -- Boss auto-load
@@ -78,7 +85,9 @@ function autoload.check_and_load(
     end
 end
 
+------------------------------------------------------------
 -- Setter to inject zone trigger loader from main addon
+------------------------------------------------------------
 function autoload.set_zone_trigger_loader(func)
     load_zone_triggers = func
 end
