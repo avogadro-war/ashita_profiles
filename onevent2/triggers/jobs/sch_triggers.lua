@@ -29,6 +29,7 @@ return {
         [4]   = 'debuff.wav',                                      -- Paralyze
         [16]  = 'debuff.wav',                                      -- Amnesia
         [177] = 'debuff.wav',                                      -- Encumbrance
+        [188] = 'mgsitem.wav',                                     -- Sublimation Complete
         -- etc.
     },
 }
