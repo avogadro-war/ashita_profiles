@@ -17,6 +17,13 @@ onevent2/
 ├── onevent2.lua ← Main addon
 ├── packet_dedupe.lua ← Deduplication helper
 ├── bufftracker.lua ← Buff gain/loss detection
+├── utils/
+│ ├── packethandler.lua
+│ ├── autoload.lua
+│ ├── statusIDs.lua
+│ ├── event.lua
+│ ├── packetdedupe.lua
+│ └── triggerloader.lua
 ├── config/
 │ └── known.lua ← Tables of known bosses, jobs, zones
 ├── triggers/
@@ -98,6 +105,7 @@ Uses a deduplication system to avoid reacting multiple times to repeated packets
 🎵 **Trigger files**
 
 Trigger files are Lua files that return a table.
+Status sensitive alerts can be evaluated either by text matching (statusIDs.lua to add custom shortening of desired names) or by ID (see statusIDs.lua).
 
 **Jobs**
 
