@@ -11,8 +11,6 @@ return {
         [43]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Refresh
         [33]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Haste
         [116] = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Phalanx
-        [11]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
-        [12]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
         -- other buff IDs...
     },
     buffgain_alerts = {
