@@ -20,8 +20,7 @@ onevent2/
 │ ├── autoload.lua
 │ ├── statusIDs.lua
 │ ├── event.lua
-│ ├── packetdedupe.lua
-│ └── triggerloader.lua
+│ └── packetdedupe.lua
 ├── config/
 │ └── known.lua ← Tables of known bosses, jobs, zones
 ├── triggers/
