@@ -11,38 +11,50 @@ local packethandler = {
     get_debug = nil,
     last_buffs = T{},
     last_zoneid = nil,
-    ignoreNextBuffSync = false,  -- skip first buff sync after zoning
+    current_buffs = T{},         -- Tracks current buffs on player
+    buff_sync_handled_time = 0,  -- Timestamp of last processed buff sync
 }
 
 local function debug_log(msg)
     if packethandler.get_debug and packethandler.get_debug() then
-        print(chat.header(addon.name):append(chat.message(msg)))
+        print(chat.header('packethandler'):append(chat.message(msg)))
     end
 end
+
+local os_time = os.time
+local cooldown_after_zone = 1 -- seconds
 
 function packethandler.start()
     ashita.events.register('packet_in', 'packet_in_handlers', function(e)
         packet_dedupe.record_packets(e)
 
         if e.id == 0x00A then
-            local zoneId = struct.unpack('H', e.data, 0x10+1)
+            -- Zone change
+            local zoneId = struct.unpack('H', e.data, 0x10 + 1)
             if zoneId and zoneId ~= packethandler.last_zoneid then
                 packethandler.last_zoneid = zoneId
-                packethandler.ignoreNextBuffSync = true
 
-                -- Store pre-zone buff list for suppressing false buff gain triggers
-                packethandler.ignoreNextBuffSync = true
-                packethandler.old_buffs = packethandler.last_buffs or T{}  -- clear last buffs for fresh diff after zone
-                debug_log(('Detected zone change to %d; will skip next buff sync diff'):format(zoneId))
+                -- Save last buffs as old buffs for diffing
+                packethandler.old_buffs = T{}
+                for k, v in pairs(packethandler.current_buffs or {}) do
+                    packethandler.old_buffs[k] = v
+                end
 
+                -- Clear current buffs until buff sync packet updates it
+                packethandler.current_buffs = T{}
+
+                packethandler.buff_sync_handled_time = 0
+                debug_log(('Detected zone change to %d; stored old buffs and cleared current buffs'):format(zoneId))
                 packethandler.onZoneChange:trigger(zoneId)
             end
+
         elseif e.id == 0x29 then
+            -- Debuff messages
             if packet_dedupe.check_duplicates(e) then return end
 
-            local message_id = struct.unpack('H', e.data, 0x18+1)
-            local actor_id   = struct.unpack('I', e.data, 0x08+1)
-            local buff_id    = struct.unpack('I', e.data, 0x0C+1)
+            local message_id = struct.unpack('H', e.data, 0x18 + 1)
+            local actor_id   = struct.unpack('I', e.data, 0x08 + 1)
+            local buff_id    = struct.unpack('I', e.data, 0x0C + 1)
 
             local expire_messages = T{ 64, 206, 204, 350, 351, 205, 321, 322 }
 
@@ -59,9 +71,15 @@ function packethandler.start()
             end
 
         elseif e.id == 0x063 then
+            -- Buff sync
             if packet_dedupe.check_duplicates(e) then return end
 
-            -- Check type field
+            local now = os_time()
+            if packethandler.buff_sync_handled_time ~= nil and (now - packethandler.buff_sync_handled_time) < cooldown_after_zone then
+                debug_log('Ignoring buff sync due to cooldown after zone')
+                return
+            end
+
             local type = ashita.bits.unpack_be(e.data_raw, 32, 8)
             if type ~= 0x09 then return end
 
@@ -69,36 +87,67 @@ function packethandler.start()
             for i = 1, 32 do
                 local buff = struct.unpack('<H', e.data, 0x07 + 2 * i)
                 if buff ~= 0 and buff ~= 255 then
-                    new_buffs[buff] = (new_buffs[buff] or 0) + 1
+                    new_buffs[buff] = true
                 end
             end
 
-            if packethandler.ignoreNextBuffSync == true then
-                -- First sync after zoning: skip and store, don’t trigger
-                packethandler.ignoreNextBuffSync = 1
-                packethandler.last_buffs = new_buffs
-                debug_log('Skipped first buff sync after zoning (storing baseline).')
-                return
-            elseif packethandler.ignoreNextBuffSync == 1 then
-                packethandler.ignoreNextBuffSync = false
-                packethandler.last_buffs = new_buffs
-                packethandler.old_buffs = nil  -- optional cleanup
-                debug_log('Skipped second buff sync after zoning (finalizing baseline).')
-                return
-            else
-                -- detect gains normally
-                for buff_id, count in pairs(new_buffs) do
-                    local old_count = packethandler.last_buffs[buff_id] or 0
-                    if count > old_count then
-                        for _ = 1, count - old_count do
-                            packethandler.buffGain:trigger(buff_id)
-                            debug_log(('Gained buff %d'):format(buff_id))
-                        end
+            if packethandler.old_buffs then
+                -- Compare new buffs to old buffs and trigger buffGain for new ones
+                for buff_id, _ in pairs(new_buffs) do
+                    local was_present = packethandler.old_buffs[buff_id]
+                    if not was_present then
+                        packethandler.buffGain:trigger(buff_id)
+                        debug_log(('Gained buff %d (post-zone baseline)'):format(buff_id))
+                    else
+                        debug_log(('Suppressed buff %d (already present before zoning)'):format(buff_id))
                     end
                 end
-                packethandler.last_buffs = new_buffs
+
+                -- Update current buffs
+                packethandler.current_buffs = new_buffs
+                packethandler.old_buffs = nil
+                packethandler.buff_sync_handled_time = now
+                debug_log('Processed first buff sync using old buffs after zoning')
+                return
+            end
+
+            if not packethandler.old_buffs then
+                -- Compare new buffs to last buffs and trigger buffGain for new ones
+                for buff_id, _ in pairs(new_buffs) do
+                    local was_present = packethandler.current_buffs[buff_id]
+                    if not was_present then
+                        packethandler.buffGain:trigger(buff_id)
+                        debug_log(('Gained buff %d'):format(buff_id))
+                    else
+                        debug_log(('Suppressed buff %d (already present in last)'):format(buff_id))
+                    end
+                end
+
+                -- Update current buffs
+                packethandler.current_buffs = new_buffs
                 debug_log('Resynced buffs after buff packet')
             end
+        end
+    end)
+
+    -- Update buffGain handler to track current_buffs and trigger only on real gains
+    packethandler.buffGain:register(function(buff_id)
+        if not packethandler.current_buffs[buff_id] then
+            packethandler.current_buffs[buff_id] = true
+            -- Forward the event for alert handling outside
+            -- e.g. main addon listens for packethandler.buffGain and plays sounds
+        else
+            debug_log(('Buff gain %d suppressed: already active'):format(buff_id))
+        end
+    end)
+
+    -- Update buffLoss handler to track current_buffs and trigger only on real losses
+    packethandler.buffLoss:register(function(buff_id, actor_id)
+        if packethandler.current_buffs[buff_id] then
+            packethandler.current_buffs[buff_id] = nil
+            -- Forward the event for alert handling outside
+        else
+            debug_log(('Buff loss %d suppressed: not tracked as active'):format(buff_id))
         end
     end)
 end

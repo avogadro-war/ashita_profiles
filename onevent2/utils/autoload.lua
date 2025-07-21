@@ -15,7 +15,6 @@ local autoload = {
 
 local packethandler = require('utils.packethandler')
 local known_zones   = require('config.known').zones
-local triggerloader = require('utils.triggerloader')
 ------------------------------------------------------------
 -- Debug log (only if debug enabled in main addon)
 local function debug_log(msg, addon_name)

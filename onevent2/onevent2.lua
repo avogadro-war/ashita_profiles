@@ -38,7 +38,8 @@ local onevent = {
     debuffexpire_alerts = {},
     paused              = false,
     debug               = false,
-    status_id_to_names  = {}
+    status_id_to_names  = {},
+    current_buffs       = T{}  -- keys = buff IDs, values = true
 }
 --------------------------------------------------------------------------------
 -- Config
@@ -179,12 +180,12 @@ packethandler.buffGain:register(function(buff_id)
         local soundPath = sounds_path .. alert
         if file_exists(soundPath) then
             ashita.misc.play_sound(soundPath)
-            debug_log(('Buff gained %d: playing %s'):fmt(buff_id, alert))
+            debug_log(('Buff gained %d: playing %s'):format(buff_id, alert))
         else
             debug_log('Missing sound file: ' .. alert)
         end
     else
-        debug_log(('Buff gained %d but no alert configured'):fmt(buff_id))
+        debug_log(('Buff gained %d but no alert configured'):format(buff_id))
     end
 end)
 

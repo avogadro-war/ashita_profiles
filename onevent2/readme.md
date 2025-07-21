@@ -15,12 +15,8 @@ Supports auto-loading triggers by job, boss, and zone.
 ```
 onevent2/
 ├── onevent2.lua ← Main addon
-├── utils/
-│ ├── packethandler.lua
-│ ├── autoload.lua
-│ ├── statusIDs.lua
-│ ├── event.lua
-│ └── packetdedupe.lua
+├── packet_dedupe.lua ← Deduplication helper
+├── bufftracker.lua ← Buff gain/loss detection
 ├── config/
 │ └── known.lua ← Tables of known bosses, jobs, zones
 ├── triggers/
@@ -102,7 +98,6 @@ Uses a deduplication system to avoid reacting multiple times to repeated packets
 🎵 **Trigger files**
 
 Trigger files are Lua files that return a table.
-Status sensitive alerts can be evaluated either by text matching (statusIDs.lua to add custom shortening of desired names) or by ID (see statusIDs.lua).
 
 **Jobs**
 
@@ -122,6 +117,8 @@ return {
         [43]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Refresh
         [33]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Haste
         [116] = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Phalanx
+        [11]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
+        [12]  = { self = nil,           other = 'stop.wav'     },  -- Gravity
         -- other buff IDs...
     },
     buffgain_alerts = {
@@ -131,9 +128,6 @@ return {
         [16]  = 'debuff.wav',                                      -- Amnesia
         [177] = 'debuff.wav',                                      -- Encumbrance
         -- etc.
-    },
-    debuffexpire_alerts = {
-        [12] = { other = 'agh.wav' },                             -- Gravity
     },
 }
 ```
