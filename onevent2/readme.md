@@ -68,8 +68,6 @@ Uses a deduplication system to avoid reacting multiple times to repeated packets
 | File                  | Purpose                                                 |
 |-----------------------|---------------------------------------------------------|
 | `onevent2.lua`        | Main addon logic, command handler, trigger loading, event hooks |
-| `bufftracker.lua`     | Tracks buff gains & losses (with zone sync and dedupe)  |
-| `packet_dedupe.lua`   | Tracks recent packets to prevent double triggers        |
 | `config/known.lua`    | Tables of known bosses, zones, jobs (by name or zoneId) |
 | `triggers/`           | Contains your custom trigger sets (by job, boss, or zone) |
 | `sounds/`             | Sound files to be played when triggers fire             |
