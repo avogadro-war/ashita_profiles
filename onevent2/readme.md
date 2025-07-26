@@ -16,30 +16,30 @@ Supports auto-loading triggers by job, boss, and zone.
 onevent2/
 ├── onevent2.lua ← Main addon
 ├── config/
-│ └── known.lua ← Tables of known bosses, jobs, zones
+│   └── known.lua ← Tables of known bosses, jobs, zones
 ├── utils/
-│ ├── autoload.lua 
-│ ├── buff_state_manager.lua 
-│ ├── event.lua 
-│ ├── packet_dedupe.lua 
-│ ├── packethandler.lua 
-│ ├── statusIDs.lua 
-│ └── triggerloader.lua 
+│   ├── autoload.lua 
+│   ├── buff_state_manager.lua 
+│   ├── event.lua 
+│   ├── packet_dedupe.lua 
+│   ├── packethandler.lua 
+│   ├── statusIDs.lua 
+│   └── triggerloader.lua 
 ├── triggers/
 │ ├── jobs/
-│ │ ├── sam_triggers.lua
-│ │ ├── rdm_triggers.lua
-│ │ └── ...
+│ │   ├── sam_triggers.lua
+│ │   ├── rdm_triggers.lua
+│ │   └── ...
 │ ├── bosses/
-│ │ ├── ody_boss1.lua
-│ │ └── ...
+│ │   ├── ody_boss1.lua
+│ │   └── ...
 │ └── zones/
-│ │ ├── walk_of_echoes.lua
-│ │ └── ...
+│     ├── walk_of_echoes.lua
+│     └── ...
 └── sounds/
-    ├── stop.wav
-    └── tf2.wav
-    └── ...
+      ├── stop.wav
+      └── tf2.wav
+      └── ...
 ```
 ## ⚙ How it works
 
