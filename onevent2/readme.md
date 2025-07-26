@@ -15,10 +15,16 @@ Supports auto-loading triggers by job, boss, and zone.
 ```
 onevent2/
 ├── onevent2.lua ← Main addon
-├── packet_dedupe.lua ← Deduplication helper
-├── bufftracker.lua ← Buff gain/loss detection
 ├── config/
 │ └── known.lua ← Tables of known bosses, jobs, zones
+├── utils/
+│ ├── autoload.lua 
+│ ├── buff_state_manager.lua 
+│ ├── event.lua 
+│ ├── packet_dedupe.lua 
+│ ├── packethandler.lua 
+│ ├── statusIDs.lua 
+│ └── triggerloader.lua 
 ├── triggers/
 │ ├── jobs/
 │ │ ├── sam_triggers.lua
