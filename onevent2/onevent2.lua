@@ -172,33 +172,45 @@ end
 --------------------------------------------------------------------------------
 -- Buff gain/loss
 --------------------------------------------------------------------------------
-packethandler.buffGain:register(function(buff_id)
+
+local buff_state_manager = require('utils.buff_state_manager')
+
+packethandler.buffGain:register(function(buff_id, actor_id)
     if onevent.paused then return end
 
-    local alert = onevent.buffgain_alerts[buff_id]
-    if alert then
-        local soundPath = sounds_path .. alert
-        if file_exists(soundPath) then
-            ashita.misc.play_sound(soundPath)
-            debug_log(('Buff gained %d: playing %s'):format(buff_id, alert))
+    -- Only trigger sound if this buff hasn't been alerted already (centralized, actor-specific)
+    if buff_state_manager.should_alert(buff_id, actor_id) then
+        buff_state_manager.mark_alerted(buff_id, actor_id)
+
+        local alert = onevent.buffgain_alerts[buff_id]
+        if alert then
+            local soundPath = sounds_path .. alert
+            if file_exists(soundPath) then
+                ashita.misc.play_sound(soundPath)
+                debug_log(('Buff gained [%d] for actor %d: playing "%s"'):format(buff_id, actor_id, alert))
+            else
+                debug_log(('Buff gained [%d] for actor %d but sound file missing: "%s"'):format(buff_id, actor_id, alert))
+            end
         else
-            debug_log('Missing sound file: ' .. alert)
+            debug_log(('Buff gained [%d] for actor %d but no alert configured.'):format(buff_id, actor_id))
         end
-    else
-        debug_log(('Buff gained %d but no alert configured'):format(buff_id))
     end
 end)
 
 packethandler.buffLoss:register(function(buff_id, actor_id)
+    -- Clear alert so future gains will re-trigger sound (centralized, actor-specific)
+    buff_state_manager.lose_buff(buff_id, actor_id)
+
     handle_buff_or_debuff_event(buff_id, actor_id, onevent.bufflose_alerts, 'BuffLost')
 end)
 
 packethandler.debuffExpire:register(function(buff_id, actor_id, message_id)
     local scope = classify_actor(actor_id)
-    debug_log(('debuffExpire: buff_id=%d actor_id=%d scope=%s'):format(buff_id, actor_id, scope))
+    debug_log(('Debuff expired [%d] from actor %d (scope: %s)'):format(buff_id, actor_id, scope))
 
     handle_buff_or_debuff_event(buff_id, actor_id, onevent.debuffexpire_alerts, 'DebuffExpired')
 end)
+
 --------------------------------------------------------------------------------
 -- Loaders with validation
 --------------------------------------------------------------------------------

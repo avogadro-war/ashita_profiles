@@ -24,12 +24,14 @@ return {
         -- other buff IDs
     },
     buffgain_alerts = {
-        [15]  = 'doom.wav',                                        -- Doom
-        [6]   = 'debuff.wav',                                      -- Silence
-        [4]   = 'debuff.wav',                                      -- Paralyze
-        [16]  = 'debuff.wav',                                      -- Amnesia
-        [177] = 'debuff.wav',                                      -- Encumbrance
-        [188] = 'mgsitem.wav',                                     -- Sublimation Complete
+        [15]  = 'doom.wav',                                       -- Doom
+        [6]   = 'opp_silenced.wav',                               -- Silence
+        [4]   = 'opp_paralyzed.wav',                              -- Paralyze
+        [16]  = 'opp_amnesia.wav',                                -- Amnesia
+        [177] = 'opp_encumbered.wav',                             -- Encumbrance
+        [7]   = 'opp_petrified.wav',                              -- Petrification
+        [188] = 'mgsitem.wav',                                    -- Sublimation Complete
+        --[42]  = 'mgsitem.wav',                                    -- Regen (testing)
         -- etc.
     },
 }

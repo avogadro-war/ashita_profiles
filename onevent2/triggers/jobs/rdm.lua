@@ -8,9 +8,9 @@ return {
         [432] = 'doorcat.wav',                                     -- Temper
         [419] = 'doorcat.wav',                                     -- Composure
         [48]  = 'wompwomp.wav',                                    -- Chainspell
-        [43]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Refresh
-        [33]  = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Haste
-        [116] = { self = 'doorcat.wav', other = 'factorio.wav' },  -- Phalanx
+        [43]  = { self = 'doorcat.wav', party = 'factorio.wav' },  -- Refresh
+        [33]  = { self = 'doorcat.wav', party = 'factorio.wav' },  -- Haste
+        [116] = { self = 'doorcat.wav', party = 'factorio.wav' },  -- Phalanx
         -- other buff IDs...
     },
     buffgain_alerts = {
@@ -19,6 +19,7 @@ return {
         [4]   = 'debuff.wav',                                      -- Paralyze
         [16]  = 'debuff.wav',                                      -- Amnesia
         [177] = 'debuff.wav',                                      -- Encumbrance
+        [43]  = 'mgsitem.wav',                                     -- Refresh
         -- etc.
     },
     debuffexpire_alerts = {
