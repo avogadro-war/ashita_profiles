@@ -305,12 +305,20 @@ ashita.events.register('packet_in', 'Keyring_0x118', function(e)
         -- Update canteen timestamp for Mystical Canteen (ID 3137)
         local canteenId = 3137
         if not state.timestamps[canteenId] or state.timestamps[canteenId] == 0 then
-            debug_print('Setting canteen acquisition timestamp')
-            state.timestamps[canteenId] = os.time()
+            -- For canteen increases after idle periods, we can't determine exact acquisition time
+            -- Instead, we'll use a conservative approach that doesn't set a timestamp
+            -- and let the user manually acquire the canteen to get an accurate timestamp
+            
+            debug_print('Canteen increase detected but cannot determine exact acquisition time')
+            debug_print('Recommendation: Acquire canteen manually to get accurate timestamp')
+            
+            -- Don't set a timestamp - let the user acquire it manually for accuracy
+            -- This prevents inaccurate cooldown tracking
             state.owned[canteenId] = true
             
-            -- Show acquisition message
-            print(chat.header('Keyring'):append(chat.message('Acquired tracked key item: Mystical Canteen (inferred from storage increase)')))
+            -- Show informative message
+            print(chat.header('Keyring'):append(chat.message('Canteen storage increased but exact acquisition time unknown.')))
+            print(chat.header('Keyring'):append(chat.message('Please acquire a canteen manually to start accurate tracking.')))
         end
     end
 
