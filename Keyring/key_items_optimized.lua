@@ -9,7 +9,7 @@ local trackedKeyItems = require('tracked_key_items')
 local key_items_reference = {}
 local success, ref_items = pcall(require, 'key_items_reference')
 if success and ref_items then
-    key_items_reference = ref_items
+    key_items_reference = ref_items.idToName or {}
 else
     -- Fallback to full key_items.lua if reference not available
     local success2, full_key_items = pcall(require, 'key_items')
