@@ -72,13 +72,9 @@ local function update_debug_mode()
     end
 end
 
-
-
 local function has_key_item(id)
     return packet_tracker.has_key_item(id)
 end
-
-
 
 local function update_storage_canteens()
     local currentTime = os.time()
@@ -113,8 +109,6 @@ local function is_item_available(id)
         return packet_tracker.is_available(id)
     end
 end
-
-
 
 ashita.events.register('command', 'command_cb', function(e)
     local args = e.command:lower():split(' ')

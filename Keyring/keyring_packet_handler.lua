@@ -295,6 +295,24 @@ ashita.events.register('packet_in', 'Keyring_0x118', function(e)
 
     local canteenCount = e.data:byte(12) or 0 
     canteenCount = math.min(canteenCount, 3)
+    
+    local previousCount = state.storage_canteens or 0
+    
+    -- Check if canteens increased (indicating acquisition)
+    if canteenCount > previousCount then
+        debug_print(string.format('Canteen count increased from %d to %d - inferring acquisition', previousCount, canteenCount))
+        
+        -- Update canteen timestamp for Mystical Canteen (ID 3137)
+        local canteenId = 3137
+        if not state.timestamps[canteenId] or state.timestamps[canteenId] == 0 then
+            debug_print('Setting canteen acquisition timestamp')
+            state.timestamps[canteenId] = os.time()
+            state.owned[canteenId] = true
+            
+            -- Show acquisition message
+            print(chat.header('Keyring'):append(chat.message('Acquired tracked key item: Mystical Canteen (inferred from storage increase)')))
+        end
+    end
 
     state.storage_canteens = canteenCount
     state.last_storage = os.time()
