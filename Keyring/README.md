@@ -76,27 +76,24 @@ All timestamps and state information are saved between game sessions, ensuring y
 
 ```
 Keyring/
-├── keyring.lua                    # Main addon file with GUI and commands
+├── keyring.lua                    # Main addon file (GUI code modularized)
 ├── keyring_packet_handler.lua     # Packet interception and state management
-├── keyring_gui.lua               # GUI rendering module (new)
-├── settings_manager.lua          # Settings management (new)
-├── constants.lua                 # Constants and configuration (new)
-├── key_items_optimized.lua       # Optimized key item mappings (new)
+├── keyring_gui.lua               # GUI rendering module
+├── key_items_optimized.lua       # Auto-generated optimized key item mappings
 ├── tracked_key_items.lua         # Configuration of tracked items
-├── key_items.lua                 # Complete key item ID to name mappings
+├── key_items_reference.lua       # Full key item reference (renamed from key_items.lua)
 ├── data/                         # Data directory for settings
 └── README.md                     # This file
 ```
 
 ### Module Overview
 
-- **`keyring.lua`**: Main addon entry point, command handling, and event registration
+- **`keyring.lua`**: Main addon entry point, command handling, and event registration (GUI code modularized)
 - **`keyring_packet_handler.lua`**: Network packet interception and state management
 - **`keyring_gui.lua`**: ImGui rendering logic and window management
-- **`settings_manager.lua`**: Unified settings loading/saving with fallback support
-- **`constants.lua`**: Centralized constants and configuration values
-- **`key_items_optimized.lua`**: Memory-efficient key item mappings (only tracked items)
+- **`key_items_optimized.lua`**: Auto-generated memory-efficient key item mappings (only tracked items)
 - **`tracked_key_items.lua`**: Configuration of which items to track and their cooldowns
+- **`key_items_reference.lua`**: Complete key item ID to name mappings (renamed from key_items.lua)
 
 ## Requirements
 

@@ -56,6 +56,6 @@ function key_items.debug_info()
 end
 
 -- Debug: Uncomment the next line to see what was loaded
-key_items.debug_info()
+-- key_items.debug_info()
 
 return key_items
