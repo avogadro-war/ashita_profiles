@@ -242,6 +242,10 @@ ashita.events.register('d3d_present', 'render', function()
         zoneCheckPending = false
     end
 
+
+
     -- Render the GUI using the modularized GUI system
-    gui.render(packet_tracker, trackedKeyItems, storageCanteens, has_key_item)
+    local keyItemStatuses = packet_tracker.get_key_item_statuses()
+    gui.render(keyItemStatuses, has_key_item, trackedKeyItems, storageCanteens)
+
 end)

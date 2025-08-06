@@ -418,6 +418,7 @@ function handler.get_key_item_statuses()
             id = id,
             name = name,
             remaining = remaining,
+            timestamp = timestamp,
         })
     end
 
