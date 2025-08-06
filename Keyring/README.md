@@ -76,13 +76,27 @@ All timestamps and state information are saved between game sessions, ensuring y
 
 ```
 Keyring/
-├── keyring.lua                 # Main addon file with GUI and commands
-├── keyring_packet_handler.lua  # Packet interception and state management
-├── tracked_key_items.lua       # Configuration of tracked items
-├── key_items.lua              # Key item ID to name mappings
-├── data/                      # Data directory for settings
-└── README.md                  # This file
+├── keyring.lua                    # Main addon file with GUI and commands
+├── keyring_packet_handler.lua     # Packet interception and state management
+├── keyring_gui.lua               # GUI rendering module (new)
+├── settings_manager.lua          # Settings management (new)
+├── constants.lua                 # Constants and configuration (new)
+├── key_items_optimized.lua       # Optimized key item mappings (new)
+├── tracked_key_items.lua         # Configuration of tracked items
+├── key_items.lua                 # Complete key item ID to name mappings
+├── data/                         # Data directory for settings
+└── README.md                     # This file
 ```
+
+### Module Overview
+
+- **`keyring.lua`**: Main addon entry point, command handling, and event registration
+- **`keyring_packet_handler.lua`**: Network packet interception and state management
+- **`keyring_gui.lua`**: ImGui rendering logic and window management
+- **`settings_manager.lua`**: Unified settings loading/saving with fallback support
+- **`constants.lua`**: Centralized constants and configuration values
+- **`key_items_optimized.lua`**: Memory-efficient key item mappings (only tracked items)
+- **`tracked_key_items.lua`**: Configuration of which items to track and their cooldowns
 
 ## Requirements
 
@@ -118,7 +132,25 @@ Feel free to submit issues, feature requests, or pull requests to improve the ad
 
 This addon is provided as-is for the Final Fantasy XI community. Use at your own discretion.
 
+## Performance & Optimization
+
+The addon has been optimized for performance and maintainability:
+
+- **Memory Efficiency**: Uses optimized key item mappings that only load tracked items
+- **Caching**: Implements intelligent caching for storage calculations to reduce redundant computations
+- **Modular Design**: Separated concerns into dedicated modules for better maintainability
+- **Error Handling**: Comprehensive input validation and error handling throughout
+- **Settings Management**: Unified settings system with proper fallback mechanisms
+
 ## Version History
+
+- **v0.2**: Performance and code organization improvements
+  - Modular architecture with separated GUI and settings management
+  - Memory optimization with targeted key item mappings
+  - Caching system for storage calculations
+  - Enhanced error handling and input validation
+  - Centralized constants and configuration
+  - Improved documentation and code structure
 
 - **v0.1**: Initial release with core tracking functionality
   - Basic key item cooldown tracking

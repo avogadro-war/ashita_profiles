@@ -6,7 +6,7 @@ require('common')
 local chat = require('chat')
 local imgui = require('imgui')
 local trackedKeyItems = require('tracked_key_items')
-local key_items = require('key_items')
+local key_items = require('key_items_optimized')
 local packet_tracker = require('keyring_packet_handler')
 
 -- Local copies of canteen state, updated via callback

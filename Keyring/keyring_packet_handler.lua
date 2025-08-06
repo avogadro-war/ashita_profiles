@@ -1,7 +1,7 @@
 require('common')
 local struct = require('struct')
 local trackedKeyItems = require('tracked_key_items')
-local key_items = require('key_items')
+local key_items = require('key_items_optimized')
 local chat = require('chat')
 
 -- Settings fallback system
@@ -151,7 +151,11 @@ end
 
 -- API: Get timestamp for acquisition
 function handler.get_timestamp(id)
-    return state.timestamps[id]
+    if not id or type(id) ~= 'number' then
+        debug_print('get_timestamp: Invalid ID provided')
+        return 0
+    end
+    return state.timestamps[id] or 0
 end
 
 -- API: Get all timestamps
@@ -161,14 +165,35 @@ end
 
 -- API: Get cooldown remaining
 function handler.get_remaining(id)
+    if not id or type(id) ~= 'number' then
+        debug_print('get_remaining: Invalid ID provided')
+        return 0
+    end
+    
     local cooldown = trackedKeyItems[id]
     local ts = state.timestamps[id]
-    if not cooldown or not ts then return nil end
-    return (ts + cooldown) - os.time()
+    if not cooldown or not ts then 
+        debug_print(string.format('get_remaining: No cooldown or timestamp for ID %d', id))
+        return 0 
+    end
+    return math.max(0, (ts + cooldown) - os.time())
 end
+
+-- Cache for storage canteen calculations
+local storage_cache = {
+    last_calc_time = 0,
+    cached_count = 0,
+    cache_duration = 5 -- Cache for 5 seconds
+}
 
 local function update_storage_canteens()
     local currentTime = os.time()
+    
+    -- Check if cache is still valid
+    if currentTime - storage_cache.last_calc_time < storage_cache.cache_duration then
+        return storage_cache.cached_count
+    end
+    
     local canteens = state.storage_canteens or 0
     local lastTime = state.last_canteen_time or 0
     local cooldown = 72000 -- 20 hours in seconds
@@ -191,6 +216,12 @@ local function update_storage_canteens()
             end
         end
     end
+    
+    -- Update cache
+    storage_cache.last_calc_time = currentTime
+    storage_cache.cached_count = canteens
+    
+    return canteens
 end
 
 
