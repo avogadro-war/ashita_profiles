@@ -1,6 +1,6 @@
 addon.author   = 'Avogadro, assistance from Thorny and Will'
 addon.name     = 'Keyring'
-addon.version  = '0.1'
+addon.version  = '0.2'
 
 require('common')
 local chat = require('chat')
@@ -442,4 +442,5 @@ ashita.events.register('d3d_present', 'render', function()
 
      imgui.Columns(1)
      imgui.End()
+
 end)
