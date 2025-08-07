@@ -102,7 +102,7 @@ Keyring/
 ├── tracked_key_items.lua         # Configuration of tracked items
 ├── key_items_reference.lua       # Full key item reference (renamed from key_items.lua)
 ├── data/                         # Data directory for settings
-│   └── keyring_settings_[CharacterName].lua  # Character-specific persistent state files
+│   └── keyring_settings_[characterserverID].lua  # Character-specific persistent state files
 └── README.md                     # This file
 ```
 
