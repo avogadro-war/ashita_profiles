@@ -47,15 +47,6 @@ function key_items.get_id(name)
     return key_items.nameToId[name]
 end
 
--- Debug function to show what was loaded
-function key_items.debug_info()
-    print("Optimized Key Items loaded:")
-    for id, name in pairs(key_items.idToName) do
-        print(string.format("  ID %d: %s", id, name))
-    end
-end
 
--- Debug: Uncomment the next line to see what was loaded
--- key_items.debug_info()
 
 return key_items

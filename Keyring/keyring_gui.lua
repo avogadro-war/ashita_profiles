@@ -66,30 +66,25 @@ end
 
 -- Render column headers
 local function render_headers(total_width)
-    imgui.Columns(4, 'cooldownColumns', true)
+    imgui.Columns(3, 'cooldownColumns', true)
     
     -- Responsive column widths with minimum sizes
     local minNameWidth = 180
     local minStatusWidth = 70
-    local minCooldownWidth = 70
     local minTimeWidth = 140
     
-    local nameWidth = math.max(total_width * 0.45, minNameWidth)
-    local statusWidth = math.max(total_width * 0.15, minStatusWidth)
-    local cooldownWidth = math.max(total_width * 0.15, minCooldownWidth)
-    local timeWidth = math.max(total_width * 0.25, minTimeWidth)
+    local nameWidth = math.max(total_width * 0.50, minNameWidth)
+    local statusWidth = math.max(total_width * 0.20, minStatusWidth)
+    local timeWidth = math.max(total_width * 0.30, minTimeWidth)
     
     imgui.SetColumnWidth(0, nameWidth)      -- Key Item
     imgui.SetColumnWidth(1, statusWidth)    -- Have?
-    imgui.SetColumnWidth(2, cooldownWidth)  -- Cooldown
-    imgui.SetColumnWidth(3, timeWidth)      -- Time Remaining
+    imgui.SetColumnWidth(2, timeWidth)      -- Time Remaining
 
     -- Headers
     center_text('Key Item')
     imgui.NextColumn()
     center_text('Have?')
-    imgui.NextColumn()
-    center_text('Cooldown')
     imgui.NextColumn()
     center_text('Time Remaining')
     imgui.NextColumn()
@@ -97,26 +92,54 @@ local function render_headers(total_width)
 end
 
 -- Render time remaining with special canteen handling
-local function render_time_remaining(item, hasItem, storageCanteens)
+local function render_time_remaining(item, hasItem, storage_canteens, packet_tracker)
     local displayText
     local textColor = {1, 0.2, 0.2, 1} -- red default
-    local showCanteenCount = (item.id == 3137)
+    local show_canteen_count = (item.id == 3137)
     
-    -- Check if we have a timestamp for this item
-    local timestamp = item.timestamp or 0
-    
-    if timestamp == 0 then
-        -- No timestamp recorded yet
-        textColor = {0.7, 0.7, 0.7, 1} -- gray
-        displayText = 'Unknown'
-    elseif item.remaining <= 0 then
-        textColor = {0, 1, 0, 1} -- green
-        displayText = 'Available'
+    if show_canteen_count then
+        -- Special handling for canteen - show generation time instead of cooldown
+        if storage_canteens >= 3 then
+            -- Storage is full - no more canteens will be generated
+            textColor = {0.7, 0.7, 0.7, 1} -- gray
+            displayText = 'Storage Full'
+        else
+            -- Check generation time
+            local generationRemaining = packet_tracker.get_canteen_generation_remaining()
+            if generationRemaining == nil then
+                textColor = {0.7, 0.7, 0.7, 1} -- gray
+                displayText = 'Unknown'
+            elseif generationRemaining <= 0 then
+                textColor = {0, 1, 0, 1} -- green
+                displayText = 'Ready'
+            else
+                local rh = math.floor(generationRemaining / 3600)
+                local rm = math.floor((generationRemaining % 3600) / 60)
+                local rs = generationRemaining % 60
+                displayText = string.format('%02dh:%02dm:%02ds', rh, rm, rs)
+            end
+        end
     else
-        local rh = math.floor(item.remaining / 3600)
-        local rm = math.floor((item.remaining % 3600) / 60)
-        local rs = item.remaining % 60
-        displayText = string.format('%02dh:%02dm:%02ds', rh, rm, rs)
+        -- Regular key item cooldown logic
+        local timestamp = item.timestamp or 0
+        
+        if timestamp == 0 or item.remaining == nil then
+            -- No timestamp recorded yet or no remaining time calculated
+            textColor = {0.7, 0.7, 0.7, 1} -- gray
+            displayText = 'Unknown'
+        elseif item.remaining <= 0 then
+            textColor = {0, 1, 0, 1} -- green
+            displayText = 'Available'
+        elseif item.remaining > 0 then
+            local rh = math.floor(item.remaining / 3600)
+            local rm = math.floor((item.remaining % 3600) / 60)
+            local rs = item.remaining % 60
+            displayText = string.format('%02dh:%02dm:%02ds', rh, rm, rs)
+        else
+            -- Fallback for any calculation issues
+            textColor = {0.7, 0.7, 0.7, 1} -- gray
+            displayText = 'Unknown'
+        end
     end
 
     -- Calculate positioning for centered text
@@ -126,7 +149,7 @@ local function render_time_remaining(item, hasItem, storageCanteens)
     if showCanteenCount then
         -- For canteen, render main text and count separately
         local mainTextWidth = imgui.CalcTextSize(displayText)
-        local canteenText = string.format(' (%d/3)', storageCanteens)
+        local canteenText = string.format(' (%d/3)', storage_canteens)
         local canteenTextWidth = imgui.CalcTextSize(canteenText)
         local totalWidth = mainTextWidth + canteenTextWidth
         local pos_x = col_start + (col_width - totalWidth) / 2
@@ -149,24 +172,43 @@ local function render_time_remaining(item, hasItem, storageCanteens)
     -- Tooltip
     if imgui.IsItemHovered() then
         imgui.BeginTooltip()
-        if timestamp == 0 then
-            imgui.Text('No acquisition time recorded yet.')
-            imgui.Text('Acquire the item to start tracking.')
-        elseif item.remaining <= 0 then
-            if item.id == 3137 and storageCanteens == 3 then
-                imgui.Text('Timer paused: Max canteens stored.')
+        if show_canteen_count then
+            -- Canteen-specific tooltip
+            if storage_canteens >= 3 then
+                imgui.Text('Storage is full (3/3 canteens).')
+                imgui.Text('Use a canteen to start generation timer.')
             else
-                imgui.Text('Available now.')
+                local generationRemaining = packet_tracker.get_canteen_generation_remaining()
+                if generationRemaining == nil then
+                    imgui.Text('Generation time unknown.')
+                    imgui.Text('Waiting for canteen data.')
+                elseif generationRemaining <= 0 then
+                    imgui.Text('Next canteen is ready to generate.')
+                else
+                    imgui.Text('Time until next canteen generation.')
+                end
             end
         else
-            imgui.Text('Still on cooldown.')
+            -- Regular key item tooltip
+            local timestamp = item.timestamp or 0
+            if timestamp == 0 or item.remaining == nil then
+                imgui.Text('No acquisition time recorded yet.')
+                imgui.Text('Acquire the item to start tracking.')
+            elseif item.remaining <= 0 then
+                imgui.Text('Available now.')
+            elseif item.remaining > 0 then
+                imgui.Text('Still on cooldown.')
+            else
+                imgui.Text('Time calculation error.')
+                imgui.Text('Please reload the addon.')
+            end
         end
         imgui.EndTooltip()
     end
 end
 
 -- Render a single key item row
-local function render_key_item_row(item, hasItem, cooldown, storageCanteens)
+local function render_key_item_row(item, hasItem, storage_canteens, packet_tracker)
     -- Key Item Name (left aligned)
     imgui.Text(item.name)
     imgui.NextColumn()
@@ -184,36 +226,83 @@ local function render_key_item_row(item, hasItem, cooldown, storageCanteens)
     end
     imgui.NextColumn()
 
-    -- Cooldown (centered)
-    local cd_h = math.floor(cooldown / 3600)
-    local cooldownText = string.format('%dh', cd_h)
-    do
-        local col_start = imgui.GetColumnOffset()
-        local col_width = imgui.GetColumnWidth()
-        local text_width = imgui.CalcTextSize(cooldownText)
-        local pos_x = col_start + (col_width - text_width) / 2
-        imgui.SetCursorPosX(pos_x)
-        imgui.Text(cooldownText)
-    end
-    imgui.NextColumn()
-
     -- Time Remaining
-    render_time_remaining(item, hasItem, storageCanteens)
+    render_time_remaining(item, hasItem, storage_canteens, packet_tracker)
     imgui.NextColumn()
     
     -- Add spacing between rows
     imgui.Spacing()
 end
 
+-- Render Dynamis [D] cooldown section
+local function render_dynamis_d_section(packet_tracker)
+    imgui.Separator()
+    imgui.Spacing()
+    
+    -- Section header
+    imgui.TextColored({1, 1, 0, 1}, 'Dynamis [D] Entry Cooldown')
+    imgui.Spacing()
+    
+    -- Get cooldown status
+    local remaining = packet_tracker.get_dynamis_d_cooldown_remaining()
+    local is_available = packet_tracker.is_dynamis_d_available()
+    local entry_time = packet_tracker.get_dynamis_d_entry_time()
+    
+    -- Status display
+    local status_text = is_available and 'Available' or 'On Cooldown'
+    local status_color = is_available and {0, 1, 0, 1} or {1, 0.2, 0.2, 1}
+    
+    imgui.Text('Status: ')
+    imgui.SameLine()
+    imgui.TextColored(status_color, status_text)
+    
+    -- Time remaining display
+    if remaining and remaining > 0 then
+        local hours = math.floor(remaining / 3600)
+        local minutes = math.floor((remaining % 3600) / 60)
+        local seconds = remaining % 60
+        
+        imgui.Text('Time Remaining: ')
+        imgui.SameLine()
+        imgui.TextColored({1, 1, 1, 1}, string.format('%02d:%02d:%02d', hours, minutes, seconds))
+    elseif entry_time > 0 then
+        imgui.Text('Time Remaining: ')
+        imgui.SameLine()
+        imgui.TextColored({0, 1, 0, 1}, 'Ready')
+    else
+        imgui.Text('Time Remaining: ')
+        imgui.SameLine()
+        imgui.TextColored({0.7, 0.7, 0.7, 1}, 'No entry recorded')
+    end
+    
+    -- Entry time display
+    if entry_time > 0 then
+        local entry_date = os.date('%Y-%m-%d %H:%M:%S', entry_time)
+        imgui.Text('Last Entry: ')
+        imgui.SameLine()
+        imgui.TextColored({0.8, 0.8, 0.8, 1}, entry_date)
+    end
+    
+    -- Tooltip with additional info
+    if imgui.IsItemHovered() then
+        imgui.BeginTooltip()
+        imgui.Text('Dynamis [D] entry cooldown is 60 hours.')
+        imgui.Text('Tracked automatically when entering')
+        imgui.Text('Dynamis [D] zones from specific areas.')
+        imgui.EndTooltip()
+    end
+end
+
 -- Main render function
-function gui.render(keyItemStatuses, has_key_item_func, trackedKeyItems, storageCanteens)
+function gui.render(keyItemStatuses, trackedKeyItems, storage_canteens, packet_tracker)
     if not showGui[1] then return end
 
-    -- Calculate dynamic window dimensions
+    -- Calculate dynamic window dimensions (add extra height for Dynamis [D] section)
     local width, height = calculate_window_dimensions(keyItemStatuses)
+    height = height + 120  -- Add space for Dynamis [D] section
     imgui.SetNextWindowSizeConstraints({width, height}, {width, height})
 
-    if not imgui.Begin('Key Item Cooldowns', showGui) then
+    if not imgui.Begin('Keyring', showGui) then
         imgui.End()
         return
     end
@@ -225,13 +314,16 @@ function gui.render(keyItemStatuses, has_key_item_func, trackedKeyItems, storage
 
     -- Render key item rows
     for i, item in ipairs(keyItemStatuses) do
-        local hasItem = has_key_item_func(item.id)
-        local cooldown = trackedKeyItems[item.id] or 0
+        local hasItem = item.owned
         
-        render_key_item_row(item, hasItem, cooldown, storageCanteens)
+        render_key_item_row(item, hasItem, storage_canteens, packet_tracker)
     end
 
     imgui.Columns(1)
+    
+    -- Render Dynamis [D] section
+    render_dynamis_d_section(packet_tracker)
+    
     imgui.End()
 end
 
